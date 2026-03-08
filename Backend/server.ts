@@ -876,3 +876,5 @@ async function bootstrap() {
 }
 
 void bootstrap();
+
+export default app;
