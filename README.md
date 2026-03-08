@@ -1,393 +1,263 @@
-# MindLift Role
+# MindLift Role 🌱
 
-### Talent & Role Application System
+Modern full-stack talent and role application platform built with React + Node.js.
 
-MindLift Role is a **full-stack MERN web application** designed to manage **role applications, talent discovery, and recruitment workflows** for projects, startups, communities, and organizations.
+MindLift Role helps applicants discover and apply for roles, while admins manage hiring workflows, application reviews, and platform insights.
 
-The platform allows individuals to **apply for roles with their CV and motivational letter**, while administrators can **review, filter, and manage applicants efficiently**.
+## Table of Contents 📚
 
-This system is designed not only for **role-based community applications**, but also for **future recruitment and talent hiring workflows**.
+- [Overview](#overview-)
+- [Features](#features-)
+- [Tech Stack](#tech-stack-)
+- [Project Structure](#project-structure-)
+- [Getting Started](#getting-started-)
+- [Environment Variables](#environment-variables-)
+- [Run Commands](#run-commands-)
+- [API Routes](#api-routes-)
+- [Frontend Routes](#frontend-routes-)
+- [File Uploads](#file-uploads-)
+- [Security](#security-)
+- [Notes](#notes-)
+- [License](#license-)
 
----
+## Overview 🔎
 
-# Table of Contents
+MindLift Role is a MERN-style application for role applications and admin workflows.
 
-- Overview
-- Features
-- Tech Stack
-- System Architecture
-- Project Structure
-- Installation
-- Environment Variables
-- Running the Project
-- API Overview
-- Application Flow
-- File Upload System
-- Security
-- Future Improvements
-- Contributing
-- License
+### Applicant side
 
----
-
-# Overview
-
-MindLift Role provides a structured system where:
-
-**Applicants can:**
-
-- Register and create profiles
+- Register and login
 - Browse open roles
-- Submit applications
-- Upload CVs
-- Write motivational letters
-- Track application status
-
-**Admins can:**
-
-- Create and manage roles
-- View applicants
-- Review CVs
-- Filter applications
-- Approve or reject candidates
-- Add internal notes
-- Monitor application statistics
-
-The platform is designed to support **future hiring pipelines and talent marketplace functionality**.
-
----
-
-# Features
-
-## Applicant Features
-
-- User registration and authentication
-- Profile creation
-- Browse open roles
-- Apply for roles
-- Upload CV
-- Submit motivational letter
-- Track application status
-
----
-
-## Admin Features
-
-- Admin dashboard
-- View all applicants
-- Filter applications by role or status
-- Review uploaded CVs
-- Approve, reject, or shortlist candidates
-- Add review notes
-- View platform statistics
-
----
-
-## Platform Features
-
-- Secure authentication
-- File upload system
-- Role-based access control
-- Application tracking
-- Scalable architecture
-- Future-ready recruitment pipeline
-
----
-
-# Tech Stack
-
-## Backend
-
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- JWT Authentication
-- Multer (file uploads)
-
----
-
-## Frontend
-
-- React
-- Tailwind CSS
-- Axios
-- React Router
-
----
-
-## Infrastructure
-
-- MongoDB Atlas
-- Cloud Storage (optional)
-- Docker (optional)
-
----
-
-# System Architecture
-
-The project follows a **MERN stack architecture**.
-
-Client (React)
-│
-▼
-REST API (Express.js)
-│
-▼
-MongoDB Database
-
-Applications interact with the backend via **RESTful APIs**.
-
-The backend handles:
-
-- authentication
-- role management
-- application submission
-- admin workflows
-
----
-
-# Project Structure
-
-MindLift Role/
-│
-├── backend/
-│ ├── config/
-│ ├── controllers/
-│ ├── middleware/
-│ ├── models/
-│ ├── routes/
-│ ├── utils/
-│ ├── uploads/
-│ ├── server.js
-│ └── package.json
-│
-├── frontend/
-│ ├── public/
-│ ├── src/
-│ │ ├── components/
-│ │ ├── pages/
-│ │ ├── services/
-│ │ ├── hooks/
-│ │ └── App.js
-│ └── package.json
-│
-├── docs/
-│
-└── README.md
-
----
-
-# Installation
-
-## Clone the Repository
-
-git clone https://github.com/yourusername/MindLift Role.git
-
-cd MindLift Role
-
----
-
-## Install Backend Dependencies
-
-cd backend
-npm install
-
----
-
-## Install Frontend Dependencies
-
-cd ../frontend
-npm install
-
----
-
-# Environment Variables
-
-Create a `.env` file in the backend directory.
-
-PORT=5000
-
-MONGO_URI=your_mongodb_connection
-
-JWT_SECRET=your_secret_key
-
-MAX_FILE_SIZE=5000000
-
-Optional:
-
-CLOUDINARY_KEY=
-CLOUDINARY_SECRET=
-CLOUDINARY_NAME=
-
----
-
-# Running the Project
-
-## Start Backend
-
-cd backend
-npm run dev
-
----
-
-## Start Frontend
-
-cd frontend
-npm start
-
-Frontend will run on:
-
-http://localhost:3000
-
-Backend will run on:
-
-http://localhost:5000
-
----
-
-# API Overview
-
-## Authentication
-
-POST /api/auth/register
-POST /api/auth/login
-GET /api/auth/profile
-
----
-
-## Roles
-
-GET /api/roles
-POST /api/roles
-PATCH /api/roles/:id
-DELETE /api/roles/:id
-
----
-
-## Applications
-
-POST /api/applications/apply
-GET /api/applications/my
-GET /api/applications/:id
-
----
-
-## Admin
-
-GET /api/admin/applications
-PATCH /api/admin/applications/:id
-GET /api/admin/stats
-
----
-
-# Application Flow
-
-1. User registers and logs in
-2. User browses available roles
-3. User submits application
-4. System stores CV and data
-5. Admin reviews applicants
-6. Admin approves, rejects, or shortlists candidates
-
----
-
-# File Upload System
-
-The platform allows users to upload:
-
-- CV
-- Portfolio files (optional)
-
-Supported formats:
-
-PDF
-DOCX
-
-Maximum file size:
-
-5MB
-
-Files are stored locally or in cloud storage depending on configuration.
-
----
-
-# Security
-
-Security features include:
-
-- Password hashing (bcrypt)
+- Submit applications with CV/portfolio and motivation text
+- Track personal application submissions
+
+### Admin side
+
+- View platform stats
+- Review applicants and applications
+- Update application statuses
+- Manage roles
+
+## Features ✨
+
+- Authentication with JWT
+- Role-based access control (user/admin)
+- Multi-step application UX
+- Admin dashboard and applicant management
+- Upload handling for documents
+- Theme support (light/dark)
+- Query/state management with TanStack Query + Zustand
+
+## Tech Stack 🧱
+
+### Frontend (`Frontend/`)
+
+- React 19 + TypeScript
+- Vite
+- Tailwind CSS v4
+- shadcn/ui + Radix primitives
+- TanStack Query
+- Zustand
+- Framer Motion
+- Zod
+
+### Backend (`Backend/`)
+
+- Node.js + Express + TypeScript
+- MongoDB + Mongoose
 - JWT authentication
-- Input validation
-- Rate limiting
-- Helmet security headers
-- File upload validation
+- Multer uploads
+- Zod validation
+- Helmet, CORS, rate limiting, morgan
 
----
+## Project Structure 🗂️
 
-# Future Improvements
+```text
+ml-role/
+├── Backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── types/
+│   ├── uploads/
+│   ├── utils/
+│   ├── zod/
+│   ├── .env
+│   ├── .env.example
+│   ├── package.json
+│   ├── server.ts
+│   └── tsconfig.json
+├── Frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── features/
+│   │   ├── layouts/
+│   │   ├── lib/
+│   │   ├── pages/
+│   │   ├── store/
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+└── README.md
+```
 
-Planned future features include:
+## Getting Started 🚀
 
-## Talent Marketplace
+### 1. Clone
 
-Organizations can search for talent using:
+```bash
+git clone <your-repo-url>
+cd ml-role
+```
 
-- skill filters
-- experience filters
-- availability
+### 2. Install dependencies
 
----
+```bash
+cd Backend
+npm install
 
-## Hiring Pipelines
+cd ../Frontend
+npm install
+```
 
-Application stages:
+## Environment Variables 🔐
 
-Applied
-Screening
-Interview
-Offer
-Hired
+Create `Backend/.env` based on `Backend/.env.example`.
 
----
+Example:
 
-## AI Candidate Screening
+```env
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/mindlift-role
+JWT_SECRET=replace-with-strong-secret
+JWT_EXPIRES_IN=7d
+CLIENT_ORIGIN=http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173
+USE_CLOUD_STORAGE=false
+UPLOAD_BASE_URL=http://localhost:5000
+```
 
-Future modules may include:
+Note: `CLIENT_ORIGIN` supports multiple comma-separated values.
 
-- CV analysis
-- skill extraction
-- automated candidate ranking
+## Run Commands 🏃
 
----
+### Backend
 
-## Notifications
+```bash
+cd Backend
+npm run dev
+```
 
-- Email alerts
-- Application status updates
-- Admin notifications
+- Dev server: `http://localhost:5000`
 
----
+### Frontend
 
-# Contributing
+```bash
+cd Frontend
+npm run dev
+```
 
-Contributions are welcome.
+- Dev server: `http://localhost:5173`
 
-Steps:
+### Useful checks
 
-1. Fork the repository
-2. Create a new branch
-3. Commit changes
-4. Submit a pull request
+```bash
+cd Backend
+npm run typecheck
 
----
+cd ../Frontend
+npm run typecheck
+npm run lint
+```
 
-# License
+## API Routes 🔌
 
-This project is licensed under the MIT License.
+Base URL: `http://localhost:5000`
 
----
+### System
 
-# Vision
+- `GET /` - Backend landing UI
+- `GET /api` - API index UI/JSON
+- `GET /api/health` - Health UI/JSON
 
-MindLift Role aims to become a **scalable talent management platform** that helps
+### Auth
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/auth/profile`
+
+### Roles
+
+- `GET /api/roles`
+- `POST /api/roles` (admin)
+- `PATCH /api/roles/:id` (admin)
+- `DELETE /api/roles/:id` (admin)
+
+### Applications
+
+- `POST /api/applications/apply`
+- `GET /api/applications/my`
+- `GET /api/applications/:id`
+
+### Admin
+
+- `GET /api/admin/applications`
+- `PATCH /api/admin/applications/:id`
+- `GET /api/admin/stats`
+- `GET /api/admin/users`
+
+### Route aliases (also available)
+
+- `/auth/*`
+- `/roles/*`
+- `/applications/*`
+- `/admin/*`
+
+## Frontend Routes 🧭
+
+The frontend currently uses an app-route state model with hash navigation support for non-root pages.
+
+Key views include:
+
+- Landing
+- About
+- Application Form
+- Minimal Application
+- Contact
+- Privacy Policy
+- Terms of Service
+- Admin Login
+- Admin Dashboard
+- Applicant List
+- Applicant Details
+
+## File Uploads 📎
+
+- Supported fields: `cv`, `portfolio`
+- Managed with Multer middleware
+- Static access path: `/uploads`
+
+## Security 🛡️
+
+- Helmet for HTTP headers
+- CORS with multi-origin support
+- API rate limiting
+- JWT auth + role middleware
+- Input validation via Zod
+
+## Notes 📝
+
+- Backend and frontend are both TypeScript.
+- Root API pages (`/`, `/api`, `/api/health`) provide browser-friendly UIs.
+- If CORS errors appear, verify `CLIENT_ORIGIN` values exactly match your frontend origin(s).
+
+## License 📄
+
+MIT (or project-defined license).
