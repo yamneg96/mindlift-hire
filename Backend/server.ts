@@ -1,10 +1,9 @@
 import path from "node:path";
+import { createRequire } from "node:module";
 import dotenv from "dotenv";
 import express from "express";
-import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
-import rateLimit from "express-rate-limit";
 
 import { connectDB } from "./config/db.js";
 import { authRoutes } from "./routes/authRoutes.js";
@@ -12,6 +11,10 @@ import { roleRoutes } from "./routes/roleRoutes.js";
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import { adminRoutes } from "./routes/adminRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+
+const require = createRequire(import.meta.url);
+const helmet: typeof import("helmet").default = require("helmet");
+const rateLimit: typeof import("express-rate-limit").default = require("express-rate-limit");
 
 dotenv.config();
 
