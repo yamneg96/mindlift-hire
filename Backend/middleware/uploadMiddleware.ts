@@ -15,15 +15,37 @@ function resolveUploadRoot() {
   return path.resolve("uploads");
 }
 
-const uploadRoot = resolveUploadRoot();
-const cvDir = path.join(uploadRoot, "cv");
-const portfolioDir = path.join(uploadRoot, "portfolio");
+function ensureUploadDirs() {
+  const preferredRoot = resolveUploadRoot();
+  const fallbackRoot = path.join(os.tmpdir(), "mindlift-role", "uploads");
 
-for (const dir of [uploadRoot, cvDir, portfolioDir]) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  const createDirs = (root: string) => {
+    const dirs = [root, path.join(root, "cv"), path.join(root, "portfolio")];
+    for (const dir of dirs) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    }
+  };
+
+  try {
+    createDirs(preferredRoot);
+    return {
+      uploadRoot: preferredRoot,
+      cvDir: path.join(preferredRoot, "cv"),
+      portfolioDir: path.join(preferredRoot, "portfolio"),
+    };
+  } catch {
+    createDirs(fallbackRoot);
+    return {
+      uploadRoot: fallbackRoot,
+      cvDir: path.join(fallbackRoot, "cv"),
+      portfolioDir: path.join(fallbackRoot, "portfolio"),
+    };
   }
 }
+
+const { cvDir, portfolioDir } = ensureUploadDirs();
 
 const storage = multer.diskStorage({
   destination: (_req, file, cb) => {
