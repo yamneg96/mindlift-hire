@@ -1,5 +1,6 @@
 export const appRoutes = [
   "landing",
+  "about",
   "application-form",
   "minimal-application",
   "contact",
@@ -15,6 +16,7 @@ export type AppRoute = (typeof appRoutes)[number]
 
 export const routeLabels: Record<AppRoute, string> = {
   landing: "LandingPage",
+  about: "AboutPage",
   "application-form": "ApplicationFormPage",
   "minimal-application": "MinimalApplicationPage",
   contact: "ContactPage",

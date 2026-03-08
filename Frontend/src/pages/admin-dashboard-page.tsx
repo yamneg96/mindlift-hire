@@ -8,6 +8,7 @@ import {
   Clock3,
 } from "lucide-react"
 
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -18,8 +19,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  mapApplicationToApplicant,
+  useAdminApplicationsQuery,
+  useAdminStatsQuery,
+} from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
-import { activityFeed, applicants, dashboardStats } from "@/lib/mock-data"
+import { activityFeed } from "@/lib/mock-data"
+import { useAppStore } from "@/store/app-store"
 
 export function AdminDashboardPage({
   onNavigate,
@@ -32,6 +39,34 @@ export function AdminDashboardPage({
       | "landing"
   ) => void
 }) {
+  const setSelectedApplicationId = useAppStore(
+    (state) => state.setSelectedApplicationId
+  )
+  const statsQuery = useAdminStatsQuery(true)
+  const recentQuery = useAdminApplicationsQuery({ page: 1, limit: 4 })
+
+  const dashboardStats = [
+    {
+      label: "Total Applications",
+      value: String(statsQuery.data?.totalApplications ?? 0),
+      trend: "Live",
+    },
+    {
+      label: "Active Roles",
+      value: String(statsQuery.data?.applicationsPerRole.length ?? 0),
+      trend: "Live",
+    },
+    {
+      label: "Pending Review",
+      value: String(statsQuery.data?.pendingApplications ?? 0),
+      trend: "Live",
+    },
+  ]
+
+  const recentItems = (recentQuery.data?.items ?? []).map(
+    mapApplicationToApplicant
+  )
+
   return (
     <AdminLayout current="dashboard" onNavigate={onNavigate}>
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -80,28 +115,43 @@ export function AdminDashboardPage({
           </CardHeader>
           <CardContent className="p-5">
             <div className="grid h-52 grid-cols-5 items-end gap-3">
-              {[45, 78, 30, 62, 22].map((value, index) => (
-                <div
-                  key={value + index}
-                  className="flex flex-col items-center gap-2"
-                >
+              {[
+                ...(statsQuery.data?.applicationsPerRole.map(
+                  (item) => item.count
+                ) ?? []),
+                0,
+                0,
+                0,
+                0,
+                0,
+              ]
+                .slice(0, 5)
+                .map((count, _idx, arr) => {
+                  const max = Math.max(...arr, 1)
+                  return Math.round((count / max) * 100)
+                })
+                .map((value, index) => (
                   <div
-                    className={
-                      index === 1
-                        ? "w-full rounded-t-md bg-primary"
-                        : "w-full rounded-t-md bg-primary/20"
-                    }
-                    style={{ height: `${value}%` }}
-                  />
-                  <span className="text-[10px] font-semibold text-muted-foreground">
-                    {index === 0 ? "Mentors" : null}
-                    {index === 1 ? "Counselors" : null}
-                    {index === 2 ? "Tutors" : null}
-                    {index === 3 ? "Admins" : null}
-                    {index === 4 ? "Events" : null}
-                  </span>
-                </div>
-              ))}
+                    key={value + index}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <div
+                      className={
+                        index === 1
+                          ? "w-full rounded-t-md bg-primary"
+                          : "w-full rounded-t-md bg-primary/20"
+                      }
+                      style={{ height: `${value}%` }}
+                    />
+                    <span className="text-[10px] font-semibold text-muted-foreground">
+                      {index === 0 ? "Mentors" : null}
+                      {index === 1 ? "Counselors" : null}
+                      {index === 2 ? "Tutors" : null}
+                      {index === 3 ? "Admins" : null}
+                      {index === 4 ? "Events" : null}
+                    </span>
+                  </div>
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -142,34 +192,50 @@ export function AdminDashboardPage({
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-4">Applicant</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applicants.slice(0, 4).map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="px-4">{item.name}</TableCell>
-                    <TableCell>{item.role}</TableCell>
-                    <TableCell>{item.score}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onNavigate("applicant-details")}
-                      >
-                        Open
-                      </Button>
-                    </TableCell>
+            {recentQuery.isLoading ? (
+              <div className="p-5 text-sm text-muted-foreground">
+                Loading recent submissions...
+              </div>
+            ) : recentItems.length === 0 ? (
+              <div className="p-5">
+                <EmptyState
+                  title="No Applications Yet"
+                  description="As users begin applying, recent submissions will appear here with status and review actions."
+                />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-4">Applicant</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="px-4">{item.name}</TableCell>
+                      <TableCell>{item.role}</TableCell>
+                      <TableCell>{item.score}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedApplicationId(item.id)
+                            onNavigate("applicant-details")
+                          }}
+                        >
+                          Open
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </section>

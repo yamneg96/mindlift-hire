@@ -2,7 +2,7 @@
 
 ### Talent & Role Application System
 
-NexusRole is a **full-stack MERN web application** designed to manage **role applications, talent discovery, and recruitment workflows** for projects, startups, communities, and organizations.
+MindLift Role is a **full-stack MERN web application** designed to manage **role applications, talent discovery, and recruitment workflows** for projects, startups, communities, and organizations.
 
 The platform allows individuals to **apply for roles with their CV and motivational letter**, while administrators can **review, filter, and manage applicants efficiently**.
 
@@ -32,7 +32,7 @@ This system is designed not only for **role-based community applications**, but 
 
 # Overview
 
-NexusRole provides a structured system where:
+MindLift Role provides a structured system where:
 
 **Applicants can:**
 
@@ -149,7 +149,7 @@ The backend handles:
 
 # Project Structure
 
-nexusrole/
+MindLift Role/
 │
 ├── backend/
 │ ├── config/
@@ -182,9 +182,9 @@ nexusrole/
 
 ## Clone the Repository
 
-git clone https://github.com/yourusername/nexusrole.git
+git clone https://github.com/yourusername/MindLift Role.git
 
-cd nexusrole
+cd MindLift Role
 
 ---
 
@@ -390,4 +390,4 @@ This project is licensed under the MIT License.
 
 # Vision
 
-NexusRole aims to become a **scalable talent management platform** that helps
+MindLift Role aims to become a **scalable talent management platform** that helps

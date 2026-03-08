@@ -1,12 +1,15 @@
 import { ArrowRight } from "lucide-react"
 
+import { EmptyState } from "@/components/empty-state"
 import { RoleCard } from "@/components/role-card"
 import { Button } from "@/components/ui/button"
+import { useRolesQuery } from "@/lib/api/hooks"
 import { PublicLayout } from "@/layouts/public-layout"
-import { roleCards } from "@/lib/mock-data"
+import type { RoleCardItem } from "@/lib/mock-data"
 
 type Navigate = (
   target:
+    | "about"
     | "application-form"
     | "minimal-application"
     | "contact"
@@ -17,11 +20,27 @@ type Navigate = (
 ) => void
 
 export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
+  const { data: roles, isLoading } = useRolesQuery()
+
+  const resolvedRoles: RoleCardItem[] =
+    roles && roles.length > 0
+      ? roles.map((role) => ({
+          id: role._id,
+          title: role.title,
+          category: role.department,
+          mode: role.status === "open" ? "Open" : "Closed",
+          description: role.description,
+          openings: role.maxApplicants,
+          image:
+            "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop",
+        }))
+      : []
+
   return (
     <PublicLayout onNavigate={onNavigate}>
       <section className="mx-auto w-full max-w-6xl px-4 py-10 md:px-6">
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 md:p-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-muted/40" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary/20 via-transparent to-muted/40" />
           <div className="relative">
             <h1 className="max-w-3xl text-4xl font-black tracking-tight md:text-5xl">
               Empower Change with MindLift
@@ -38,7 +57,7 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
                 View Open Roles
                 <ArrowRight className="size-4" />
               </Button>
-              <Button variant="outline" onClick={() => onNavigate("contact")}>
+              <Button variant="outline" onClick={() => onNavigate("about")}>
                 Learn More
               </Button>
             </div>
@@ -63,11 +82,29 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
             Quick Apply
           </button>
         </div>
-        <div className="flex flex-col gap-5">
-          {roleCards.map((role) => (
-            <RoleCard key={role.id} role={role} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="h-44 animate-pulse rounded-2xl border border-border bg-muted/40"
+              />
+            ))}
+          </div>
+        ) : resolvedRoles.length === 0 ? (
+          <EmptyState
+            title="No Open Roles Yet"
+            description="Your backend is connected. Once admin publishes open roles, they will appear here instantly."
+            actionLabel="Preview Sample Roles"
+            onAction={() => onNavigate("minimal-application")}
+          />
+        ) : (
+          <div className="flex flex-col gap-5">
+            {resolvedRoles.map((role) => (
+              <RoleCard key={role.id} role={role} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="border-t border-border bg-muted/30 py-12">

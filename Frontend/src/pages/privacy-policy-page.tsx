@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 
 type Navigate = (
   target:
+    | "about"
     | "application-form"
     | "minimal-application"
     | "contact"

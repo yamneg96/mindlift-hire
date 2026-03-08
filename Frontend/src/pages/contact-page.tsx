@@ -10,6 +10,7 @@ import { PublicLayout } from "@/layouts/public-layout"
 
 type Navigate = (
   target:
+    | "about"
     | "application-form"
     | "minimal-application"
     | "contact"

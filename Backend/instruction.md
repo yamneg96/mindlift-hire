@@ -1,6 +1,6 @@
 ## Project Name
 
-**NexusRole – Talent & Role Application System**
+**MindLift Role – Talent & Role Application System**
 
 # Objective
 

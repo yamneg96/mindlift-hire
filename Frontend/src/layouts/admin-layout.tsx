@@ -43,7 +43,10 @@ export function AdminLayout({
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden w-64 border-r border-border bg-card lg:flex lg:flex-col">
         <div className="p-5">
-          <BrandLogo subtitle="Admin Portal" />
+          <BrandLogo
+            subtitle="Admin Portal"
+            onClick={() => onNavigate("landing")}
+          />
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {adminSidebarItems.map((item) => {

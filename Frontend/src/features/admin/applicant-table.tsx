@@ -36,7 +36,7 @@ export function ApplicantTable({
   onViewDetails,
 }: {
   items: Applicant[]
-  onViewDetails: () => void
+  onViewDetails: (item: Applicant) => void
 }) {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -143,7 +143,11 @@ export function ApplicantTable({
                   <StatusBadge status={item.status} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="sm" variant="outline" onClick={onViewDetails}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewDetails(item)}
+                  >
                     View Details
                   </Button>
                 </TableCell>
@@ -169,7 +173,11 @@ export function ApplicantTable({
             </p>
             <div className="mt-3 flex items-center justify-between">
               <p className="text-sm font-semibold">Score: {item.score}</p>
-              <Button size="sm" variant="outline" onClick={onViewDetails}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onViewDetails(item)}
+              >
                 View
               </Button>
             </div>

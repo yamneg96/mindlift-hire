@@ -1,4 +1,4 @@
-# NexusRole Backend
+# MindLift Role Backend
 
 Production-style backend for role application and recruitment workflow.
 

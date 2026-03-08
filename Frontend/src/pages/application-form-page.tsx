@@ -3,6 +3,7 @@ import { PublicLayout } from "@/layouts/public-layout"
 
 type Navigate = (
   target:
+    | "about"
     | "application-form"
     | "minimal-application"
     | "contact"
@@ -15,7 +16,7 @@ type Navigate = (
 export function ApplicationFormPage({ onNavigate }: { onNavigate: Navigate }) {
   return (
     <PublicLayout onNavigate={onNavigate}>
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-6 md:py-10">
+      <div className="mx-auto flex h-screen w-full max-w-4xl flex-col justify-center-safe px-4 py-8 text-center md:px-6 md:py-10">
         <h1 className="text-4xl font-black tracking-tight md:text-5xl">
           Role Application
         </h1>
