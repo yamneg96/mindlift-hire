@@ -30,6 +30,18 @@ export const loginResponseSchema = z.object({
   user: authUserSchema,
 })
 
+export const adminLoginOtpResponseSchema = z.object({
+  email: z.string().email(),
+  otpSent: z.boolean(),
+})
+
+export const adminVerifyOtpResponseSchema = loginResponseSchema
+
+export const adminSendEmailResponseSchema = z.object({
+  sent: z.number(),
+  recipients: z.array(z.string().email()),
+})
+
 export const applicationsPerRoleSchema = z.object({
   roleId: z.string(),
   roleTitle: z.string(),
@@ -68,7 +80,14 @@ export const populatedRoleSchema = z
 
 export const applicationItemSchema = z.object({
   _id: z.string(),
-  userId: z.union([z.string(), populatedUserSchema]),
+  applicantName: z.string().optional().default("Unknown Applicant"),
+  applicantEmail: z.string().email().optional().default("unknown@example.com"),
+  linkedin: z.string().optional().default(""),
+  portfolio: z.string().optional().default(""),
+  skills: z.array(z.string()).optional().default([]),
+  experienceLevel: z.string().optional().default(""),
+  availability: z.string().optional().default(""),
+  userId: z.union([z.string(), populatedUserSchema]).optional(),
   roleId: z.union([z.string(), populatedRoleSchema]),
   cvUrl: z.string(),
   portfolioUrl: z.string().optional().default(""),

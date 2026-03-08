@@ -7,7 +7,9 @@ export const appRoutes = [
   "privacy",
   "terms",
   "admin-login",
+  "admin-verify-otp",
   "admin-dashboard",
+  "admin-email",
   "applicant-list",
   "applicant-details",
 ] as const
@@ -23,7 +25,9 @@ export const routeLabels: Record<AppRoute, string> = {
   privacy: "PrivacyPolicyPage",
   terms: "TermsOfServicePage",
   "admin-login": "AdminLoginPage",
+  "admin-verify-otp": "AdminVerifyOtpPage",
   "admin-dashboard": "AdminDashboardPage",
+  "admin-email": "AdminEmailPage",
   "applicant-list": "ApplicantListPage",
   "applicant-details": "ApplicantDetailsPage",
 }

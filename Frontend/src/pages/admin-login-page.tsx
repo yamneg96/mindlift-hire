@@ -1,26 +1,28 @@
 import { useState, type ReactNode } from "react"
-import { Eye, Lock, Mail } from "lucide-react"
+import { Lock, Mail } from "lucide-react"
 
 import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useLoginMutation } from "@/lib/api/hooks"
+import { useAdminLoginOtpMutation } from "@/lib/api/hooks"
+import { useAppStore } from "@/store/app-store"
 
 export function AdminLoginPage({
   onNavigate,
 }: {
-  onNavigate: (target: "admin-dashboard" | "landing") => void
+  onNavigate: (target: "admin-verify-otp" | "landing") => void
 }) {
   const [email, setEmail] = useState("admin@mindlift.com")
-  const [password, setPassword] = useState("password123")
-  const loginMutation = useLoginMutation()
+  const setAdminOtpEmail = useAppStore((state) => state.setAdminOtpEmail)
+  const loginOtpMutation = useAdminLoginOtpMutation()
 
-  const submitLogin = async () => {
+  const submitLoginOtp = async () => {
     try {
-      await loginMutation.mutateAsync({ email, password })
-      onNavigate("admin-dashboard")
+      await loginOtpMutation.mutateAsync({ email })
+      setAdminOtpEmail(email)
+      onNavigate("admin-verify-otp")
     } catch {
       // no-op; message shown below
     }
@@ -39,7 +41,8 @@ export function AdminLoginPage({
               onClick={() => onNavigate("landing")}
             />
             <p className="mt-4 text-sm text-muted-foreground">
-              Please sign in to your admin account.
+              Enter your authorized admin email and we will send a one-time
+              verification code.
             </p>
           </div>
           <CardContent className="space-y-4 p-6">
@@ -51,25 +54,21 @@ export function AdminLoginPage({
               value={email}
               onChange={setEmail}
             />
-            <Field
-              icon={<Lock className="size-4" />}
-              label="Password"
-              placeholder="********"
-              rightIcon={<Eye className="size-4" />}
-              type="password"
-              value={password}
-              onChange={setPassword}
-            />
             <Button
               className="w-full"
-              disabled={loginMutation.isPending}
-              onClick={submitLogin}
+              disabled={loginOtpMutation.isPending}
+              onClick={submitLoginOtp}
             >
-              {loginMutation.isPending ? "Signing in..." : "Sign In to Portal"}
+              {loginOtpMutation.isPending ? "Sending OTP..." : "Send OTP"}
             </Button>
-            {loginMutation.isError ? (
+            {loginOtpMutation.isError ? (
               <p className="text-sm text-destructive">
-                {(loginMutation.error as Error).message}
+                {(loginOtpMutation.error as Error).message}
+              </p>
+            ) : null}
+            {loginOtpMutation.isSuccess ? (
+              <p className="text-sm text-primary">
+                OTP sent. Continue to verification.
               </p>
             ) : null}
             <Button

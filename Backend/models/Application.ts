@@ -2,7 +2,19 @@ import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
 const applicationSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    applicantName: { type: String, required: true, trim: true },
+    applicantEmail: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+    linkedin: { type: String, default: "" },
+    portfolio: { type: String, default: "" },
+    skills: { type: [String], default: [] },
+    experienceLevel: { type: String, default: "" },
+    availability: { type: String, default: "" },
     roleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
     cvUrl: { type: String, required: true },
     portfolioUrl: { type: String, default: "" },
@@ -30,7 +42,7 @@ const applicationSchema = new Schema(
 );
 
 applicationSchema.index({ roleId: 1, status: 1, appliedAt: -1 });
-applicationSchema.index({ userId: 1, roleId: 1 }, { unique: true });
+applicationSchema.index({ applicantEmail: 1, roleId: 1 });
 
 export type ApplicationDocument = InferSchemaType<typeof applicationSchema>;
 

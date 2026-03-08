@@ -3,10 +3,12 @@ import { z } from "zod"
 
 import { apiRequest } from "@/lib/api/client"
 import {
+  adminLoginOtpResponseSchema,
+  adminSendEmailResponseSchema,
+  adminVerifyOtpResponseSchema,
   adminApplicationsSchema,
   adminStatsSchema,
   applicationItemSchema,
-  loginResponseSchema,
   roleSchema,
   type ApplicationItemApi,
 } from "@/lib/api/schemas"
@@ -58,12 +60,22 @@ export function useApplicationByIdQuery(id: string | null, enabled = true) {
   })
 }
 
-export function useLoginMutation() {
+export function useAdminLoginOtpMutation() {
+  return useMutation({
+    mutationFn: (payload: { email: string }) =>
+      apiRequest("/admin/login", adminLoginOtpResponseSchema, {
+        method: "POST",
+        body: payload,
+      }),
+  })
+}
+
+export function useAdminVerifyOtpMutation() {
   const setAuth = useAppStore((state) => state.setAuth)
 
   return useMutation({
-    mutationFn: (payload: { email: string; password: string }) =>
-      apiRequest("/auth/login", loginResponseSchema, {
+    mutationFn: (payload: { email: string; otp: string }) =>
+      apiRequest("/admin/verify-otp", adminVerifyOtpResponseSchema, {
         method: "POST",
         body: payload,
       }),
@@ -77,25 +89,35 @@ export function useApplyMutation() {
   return useMutation({
     mutationFn: (payload: {
       roleId: string
+      fullName: string
+      email: string
       motivationLetter: string
-      experienceLevel: string
-      availability: string
+      linkedin?: string
+      portfolioLink?: string
+      skills?: string[]
+      experienceLevel?: string
+      availability?: string
       expectedContribution?: string
       cv: File
-      portfolio?: File | null
+      portfolioFile?: File | null
     }) => {
       const formData = new FormData()
       formData.append("roleId", payload.roleId)
+      formData.append("fullName", payload.fullName)
+      formData.append("email", payload.email)
       formData.append("motivationLetter", payload.motivationLetter)
-      formData.append("experienceLevel", payload.experienceLevel)
-      formData.append("availability", payload.availability)
+      formData.append("linkedin", payload.linkedin ?? "")
+      formData.append("portfolio", payload.portfolioLink ?? "")
+      formData.append("skills", (payload.skills ?? []).join(","))
+      formData.append("experienceLevel", payload.experienceLevel ?? "")
+      formData.append("availability", payload.availability ?? "")
       formData.append(
         "expectedContribution",
         payload.expectedContribution ?? ""
       )
       formData.append("cv", payload.cv)
-      if (payload.portfolio) {
-        formData.append("portfolio", payload.portfolio)
+      if (payload.portfolioFile) {
+        formData.append("portfolio", payload.portfolioFile)
       }
 
       return apiRequest("/applications/apply", applicationItemSchema, {
@@ -107,18 +129,23 @@ export function useApplyMutation() {
   })
 }
 
-export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
-  const rawUser = item.userId
-  const rawRole = item.roleId
+export function useAdminSendEmailMutation() {
+  return useMutation({
+    mutationFn: (payload: {
+      recipients: string[]
+      body: string
+      subject?: string
+      roleTitle?: string
+    }) =>
+      apiRequest("/admin/send-email", adminSendEmailResponseSchema, {
+        method: "POST",
+        body: payload,
+      }),
+  })
+}
 
-  const userObj =
-    typeof rawUser === "string"
-      ? {
-          _id: rawUser,
-          name: "Unknown Applicant",
-          email: "unknown@example.com",
-        }
-      : rawUser
+export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
+  const rawRole = item.roleId
 
   const roleObj =
     typeof rawRole === "string"
@@ -132,12 +159,12 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
     rejected: "rejected",
   }
 
-  const name = userObj.name ?? "Unknown Applicant"
+  const name = item.applicantName ?? "Unknown Applicant"
 
   return {
     id: item._id,
     name,
-    email: userObj.email ?? "unknown@example.com",
+    email: item.applicantEmail ?? "unknown@example.com",
     initials: name
       .split(" ")
       .map((part) => part[0])
@@ -159,8 +186,12 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
     status: statusMap[item.status],
     location: "Not provided",
     phone: "Not provided",
-    linkedin: "Not provided",
-    experience: [item.additionalAnswers?.experienceLevel ?? "Not provided"],
+    linkedin: item.linkedin || "Not provided",
+    experience: [
+      item.experienceLevel ||
+        item.additionalAnswers?.experienceLevel ||
+        "Not provided",
+    ],
     education: "Not provided",
     motivationLetter: item.motivationLetter,
     documents: [{ name: "CV", type: "PDF/DOCX", size: "Uploaded" }],

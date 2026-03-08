@@ -34,6 +34,7 @@ export function AdminDashboardPage({
   onNavigate: (
     target:
       | "admin-dashboard"
+      | "admin-email"
       | "applicant-list"
       | "applicant-details"
       | "landing"

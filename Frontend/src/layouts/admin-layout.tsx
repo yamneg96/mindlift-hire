@@ -13,13 +13,14 @@ import { Button } from "@/components/ui/button"
 import { adminSidebarItems } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
-type AdminPage = "dashboard" | "applicants" | "details"
+type AdminPage = "dashboard" | "applicants" | "details" | "email"
 
 type AdminLayoutProps = PropsWithChildren<{
   current: AdminPage
   onNavigate: (
     target:
       | "admin-dashboard"
+      | "admin-email"
       | "applicant-list"
       | "applicant-details"
       | "landing"
@@ -54,7 +55,8 @@ export function AdminLayout({
             const active =
               (item === "Dashboard" && current === "dashboard") ||
               (item === "Applicants" &&
-                (current === "applicants" || current === "details"))
+                (current === "applicants" || current === "details")) ||
+              (item === "Notifications" && current === "email")
             return (
               <button
                 key={item}
@@ -67,6 +69,7 @@ export function AdminLayout({
                 onClick={() => {
                   if (item === "Dashboard") onNavigate("admin-dashboard")
                   if (item === "Applicants") onNavigate("applicant-list")
+                  if (item === "Notifications") onNavigate("admin-email")
                 }}
               >
                 <Icon className="size-4" />

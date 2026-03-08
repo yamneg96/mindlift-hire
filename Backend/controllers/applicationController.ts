@@ -7,6 +7,7 @@ import { applySchema } from "../zod/application.js";
 import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 import { uploadToCloudStorage } from "../config/cloudStorage.js";
+import { sendApplicantNotificationEmail } from "../services/email/emailService.js";
 
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
@@ -24,10 +25,6 @@ function buildPublicFileUrl(filePath: string) {
 }
 
 export async function applyForRole(req: Request, res: Response) {
-  if (!req.user) {
-    return sendError(res, "Unauthorized", 401);
-  }
-
   const body = parseBody<ReturnType<typeof applySchema.parse>>(
     applySchema,
     req.body,
@@ -50,7 +47,7 @@ export async function applyForRole(req: Request, res: Response) {
   }
 
   const existing = await ApplicationModel.findOne({
-    userId: req.user.id,
+    applicantEmail: body.email.toLowerCase(),
     roleId: body.roleId,
   }).lean();
 
@@ -72,7 +69,13 @@ export async function applyForRole(req: Request, res: Response) {
   }
 
   const application = await ApplicationModel.create({
-    userId: req.user.id,
+    applicantName: body.fullName,
+    applicantEmail: body.email.toLowerCase(),
+    linkedin: body.linkedin ?? "",
+    portfolio: body.portfolio ?? "",
+    skills: body.skills ?? [],
+    experienceLevel: body.experienceLevel ?? "",
+    availability: body.availability ?? "",
     roleId: body.roleId,
     cvUrl,
     portfolioUrl,
@@ -89,44 +92,32 @@ export async function applyForRole(req: Request, res: Response) {
   // eslint-disable-next-line no-console
   console.log(`[application] submitted: ${application._id}`);
 
+  const roleTitle =
+    (role as { title?: string }).title ?? "the selected position";
+
+  await sendApplicantNotificationEmail({
+    to: body.email.toLowerCase(),
+    subject: "We received your MindLift application",
+    title: "Application Received",
+    subtitle: "Thank you for applying to MindLift",
+    roleTitle,
+    message:
+      "We have received your application and our team will contact you after the initial filtering process is completed.",
+  }).catch(() => {
+    // no-op: application submission should succeed even if email delivery fails
+  });
+
   return sendSuccess(res, application, "Application submitted", 201);
 }
 
-export async function listMyApplications(req: Request, res: Response) {
-  if (!req.user) {
-    return sendError(res, "Unauthorized", 401);
-  }
-
-  const applications = await ApplicationModel.find({ userId: req.user.id })
-    .populate("roleId", "title department status")
-    .sort({ appliedAt: -1 })
-    .lean();
-
-  return sendSuccess(res, applications);
-}
-
 export async function getApplicationById(req: Request, res: Response) {
-  if (!req.user) {
-    return sendError(res, "Unauthorized", 401);
-  }
-
-  const application = await ApplicationModel.findById(req.params.id)
-    .populate("roleId", "title department status")
-    .populate("userId", "name email profile");
+  const application = await ApplicationModel.findById(req.params.id).populate(
+    "roleId",
+    "title department status",
+  );
 
   if (!application) {
     return sendError(res, "Application not found", 404);
-  }
-
-  const appUser = application.userId as { _id?: unknown } | unknown;
-  const ownerId =
-    typeof appUser === "object" && appUser !== null && "_id" in appUser
-      ? String((appUser as { _id: unknown })._id)
-      : String(appUser);
-  const isOwner = ownerId === req.user.id;
-  const isAdmin = req.user.role === "admin";
-  if (!isOwner && !isAdmin) {
-    return sendError(res, "Forbidden", 403);
   }
 
   return sendSuccess(res, application.toObject());

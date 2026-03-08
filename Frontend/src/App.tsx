@@ -10,9 +10,12 @@ import { ContactPage } from "@/pages/contact-page"
 import { PrivacyPolicyPage } from "@/pages/privacy-policy-page"
 import { TermsOfServicePage } from "@/pages/terms-of-service-page"
 import { AdminLoginPage } from "@/pages/admin-login-page"
+import { AdminOtpPage } from "@/pages/admin-otp-page"
 import { AdminDashboardPage } from "@/pages/admin-dashboard-page"
+import { AdminEmailPage } from "@/pages/admin-email-page"
 import { ApplicantListPage } from "@/pages/applicant-list-page"
 import { ApplicantDetailsPage } from "@/pages/applicant-details-page"
+import { useAppStore } from "@/store/app-store"
 
 const defaultRoute: AppRoute = "landing"
 
@@ -57,10 +60,20 @@ const routeMeta: Record<AppRoute, { title: string; description: string }> = {
     description:
       "Secure sign-in for MindLift administrators to manage applicants and recruitment workflows.",
   },
+  "admin-verify-otp": {
+    title: "Verify OTP | MindLift Role Portal",
+    description:
+      "Verify your one-time passcode to access the MindLift admin dashboard.",
+  },
   "admin-dashboard": {
     title: "Admin Dashboard | MindLift Role Portal",
     description:
       "Monitor application metrics, activity, and candidate progress from the MindLift admin dashboard.",
+  },
+  "admin-email": {
+    title: "Admin Email Center | MindLift Role Portal",
+    description:
+      "Send application updates and outreach messages to selected MindLift applicants.",
   },
   "applicant-list": {
     title: "Applicants | MindLift Role Portal",
@@ -80,9 +93,13 @@ function routeFromHash(hash: string): AppRoute {
 }
 
 export function App() {
+  const token = useAppStore((state) => state.token)
+  const userRole = useAppStore((state) => state.user?.role)
   const [route, setRoute] = useState<AppRoute>(() =>
     routeFromHash(window.location.hash)
   )
+
+  const isAdminAuthenticated = Boolean(token && userRole === "admin")
 
   const goTo = (target: AppRoute) => {
     setRoute(target)
@@ -173,15 +190,33 @@ export function App() {
         return (
           <AdminLoginPage
             onNavigate={(target) =>
-              goTo(target === "admin-dashboard" ? "admin-dashboard" : "landing")
+              goTo(
+                target === "admin-verify-otp" ? "admin-verify-otp" : "landing"
+              )
             }
           />
         )
+      case "admin-verify-otp":
+        return <AdminOtpPage onNavigate={goTo} />
       case "admin-dashboard":
+        if (!isAdminAuthenticated) {
+          return <AdminLoginPage onNavigate={goTo} />
+        }
         return <AdminDashboardPage onNavigate={goTo} />
+      case "admin-email":
+        if (!isAdminAuthenticated) {
+          return <AdminLoginPage onNavigate={goTo} />
+        }
+        return <AdminEmailPage onNavigate={goTo} />
       case "applicant-list":
+        if (!isAdminAuthenticated) {
+          return <AdminLoginPage onNavigate={goTo} />
+        }
         return <ApplicantListPage onNavigate={goTo} />
       case "applicant-details":
+        if (!isAdminAuthenticated) {
+          return <AdminLoginPage onNavigate={goTo} />
+        }
         return <ApplicantDetailsPage onNavigate={goTo} />
       default:
         return <LandingPage onNavigate={(target) => goTo(target as AppRoute)} />

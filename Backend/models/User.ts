@@ -10,8 +10,7 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    role: { type: String, enum: ["admin"], default: "admin" },
     profile: {
       linkedin: { type: String, default: "" },
       github: { type: String, default: "" },

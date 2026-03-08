@@ -3,7 +3,6 @@ import type { Request, Response } from "express";
 import { AdminNoteModel } from "../models/AdminNote.js";
 import { ApplicationModel } from "../models/Application.js";
 import { RoleModel } from "../models/Role.js";
-import { UserModel } from "../models/User.js";
 import {
   adminFilterSchema,
   updateApplicationDecisionSchema,
@@ -65,7 +64,6 @@ export async function listApplicationsForAdmin(req: Request, res: Response) {
   const skip = (query.page - 1) * query.limit;
 
   let applications = await ApplicationModel.find(dbQuery)
-    .populate("userId", "name email profile.skills")
     .populate("roleId", "title department")
     .sort({ appliedAt: -1 })
     .skip(skip)
@@ -75,17 +73,15 @@ export async function listApplicationsForAdmin(req: Request, res: Response) {
   if (query.skill) {
     const skillRegex = new RegExp(query.skill, "i");
     applications = applications.filter((app) => {
-      const skills =
-        (app.userId as { profile?: { skills?: string[] } })?.profile?.skills ??
-        [];
-      return skills.some((skill) => skillRegex.test(skill));
+      const skills = (app.skills ?? []) as string[];
+      return skills.some((skill: string) => skillRegex.test(skill));
     });
   }
 
   if (query.export === "csv") {
     const csvRows = applications.map((app) => ({
-      applicantName: (app.userId as { name?: string })?.name,
-      applicantEmail: (app.userId as { email?: string })?.email,
+      applicantName: app.applicantName,
+      applicantEmail: app.applicantEmail,
       role: (app.roleId as { title?: string })?.title,
       cvUrl: app.cvUrl,
       status: app.status,
@@ -153,13 +149,13 @@ export async function updateApplicationByAdmin(req: Request, res: Response) {
 
 export async function getAdminStats(_req: Request, res: Response) {
   const [
-    totalUsers,
+    distinctApplicants,
     totalApplications,
     pendingApplications,
     approvedApplications,
     applicationsPerRole,
   ] = await Promise.all([
-    UserModel.countDocuments(),
+    ApplicationModel.distinct("applicantEmail"),
     ApplicationModel.countDocuments(),
     ApplicationModel.countDocuments({ status: "pending" }),
     ApplicationModel.countDocuments({ status: "approved" }),
@@ -192,7 +188,7 @@ export async function getAdminStats(_req: Request, res: Response) {
   ]);
 
   return sendSuccess(res, {
-    totalUsers,
+    totalUsers: distinctApplicants.length,
     totalApplications,
     pendingApplications,
     approvedApplications,
@@ -201,9 +197,16 @@ export async function getAdminStats(_req: Request, res: Response) {
 }
 
 export async function listUsersForAdmin(_req: Request, res: Response) {
-  const users = await UserModel.find()
-    .select("-password")
-    .sort({ createdAt: -1 })
-    .lean();
-  return sendSuccess(res, users);
+  const admins = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean)
+    .map((email, index) => ({
+      id: `admin-${index + 1}`,
+      name: "Admin",
+      email,
+      role: "admin",
+    }));
+
+  return sendSuccess(res, admins);
 }

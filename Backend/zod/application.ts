@@ -2,9 +2,24 @@ import { z } from "zod";
 
 export const applySchema = z.object({
   roleId: z.string().min(1),
+  fullName: z.string().min(2),
+  email: z.string().email(),
   motivationLetter: z.string().min(20),
-  experienceLevel: z.string().min(1),
-  availability: z.string().min(1),
+  linkedin: z.string().optional(),
+  portfolio: z.string().optional(),
+  skills: z
+    .union([z.array(z.string()), z.string()])
+    .optional()
+    .transform((value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }),
+  experienceLevel: z.string().optional(),
+  availability: z.string().optional(),
   expectedContribution: z.string().optional(),
 });
 

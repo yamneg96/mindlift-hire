@@ -1,7 +1,6 @@
 import { useState } from "react"
 
 import { PublicLayout } from "@/layouts/public-layout"
-import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApplyMutation, useRolesQuery } from "@/lib/api/hooks"
-import { useAppStore } from "@/store/app-store"
 
 type Navigate = (
   target:
@@ -34,36 +32,43 @@ export function MinimalApplicationPage({
 }: {
   onNavigate: Navigate
 }) {
-  const token = useAppStore((state) => state.token)
   const rolesQuery = useRolesQuery()
   const applyMutation = useApplyMutation()
 
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
   const [roleId, setRoleId] = useState("")
+  const [linkedin, setLinkedin] = useState("")
+  const [portfolioLink, setPortfolioLink] = useState("")
+  const [skills, setSkills] = useState("")
   const [experienceLevel, setExperienceLevel] = useState("")
   const [availability, setAvailability] = useState("")
   const [motivationLetter, setMotivationLetter] = useState("")
   const [expectedContribution, setExpectedContribution] = useState("")
   const [cv, setCv] = useState<File | null>(null)
-  const [portfolio, setPortfolio] = useState<File | null>(null)
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
 
   const submit = async () => {
-    if (
-      !roleId ||
-      !motivationLetter ||
-      !experienceLevel ||
-      !availability ||
-      !cv
-    ) {
+    if (!fullName || !email || !roleId || !motivationLetter || !cv) {
       return
     }
+
     await applyMutation.mutateAsync({
       roleId,
+      fullName,
+      email,
+      linkedin,
+      portfolioLink,
+      skills: skills
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
       motivationLetter,
       experienceLevel,
       availability,
       expectedContribution,
       cv,
-      portfolio,
+      portfolioFile,
     })
   }
 
@@ -80,14 +85,27 @@ export function MinimalApplicationPage({
             <CardTitle>Minimal Application</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
-            {!token ? (
-              <EmptyState
-                title="Sign in Required"
-                description="Applications are now live to backend APIs. Sign in first so your submission can be linked to your account."
-                actionLabel="Go to Admin Login"
-                onAction={() => onNavigate("admin-login")}
-              />
-            ) : null}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  className="h-10"
+                  placeholder="Jane Doe"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  className="h-10"
+                  placeholder="jane@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label>Role Selection</Label>
@@ -113,7 +131,34 @@ export function MinimalApplicationPage({
               )}
             </div>
             <div className="space-y-2">
-              <Label>Experience Level</Label>
+              <Label>LinkedIn (Optional)</Label>
+              <Input
+                className="h-10"
+                placeholder="https://linkedin.com/in/username"
+                value={linkedin}
+                onChange={(event) => setLinkedin(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Portfolio Link (Optional)</Label>
+              <Input
+                className="h-10"
+                placeholder="https://portfolio.com"
+                value={portfolioLink}
+                onChange={(event) => setPortfolioLink(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Skills (Optional, comma separated)</Label>
+              <Input
+                className="h-10"
+                placeholder="React, Node.js, Community Ops"
+                value={skills}
+                onChange={(event) => setSkills(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Experience Level (Optional)</Label>
               <Input
                 className="h-10"
                 placeholder="Mid-level"
@@ -122,7 +167,7 @@ export function MinimalApplicationPage({
               />
             </div>
             <div className="space-y-2">
-              <Label>Availability</Label>
+              <Label>Availability (Optional)</Label>
               <Input
                 className="h-10"
                 placeholder="20 hours/week"
@@ -139,12 +184,12 @@ export function MinimalApplicationPage({
               />
             </div>
             <div className="space-y-2">
-              <Label>Portfolio (Optional)</Label>
+              <Label>Portfolio File (Optional)</Label>
               <Input
                 className="h-10"
                 type="file"
                 onChange={(event) =>
-                  setPortfolio(event.target.files?.[0] ?? null)
+                  setPortfolioFile(event.target.files?.[0] ?? null)
                 }
               />
             </div>
@@ -180,7 +225,7 @@ export function MinimalApplicationPage({
             ) : null}
             <Button
               className="w-full"
-              disabled={!token || applyMutation.isPending}
+              disabled={applyMutation.isPending}
               onClick={submit}
             >
               {applyMutation.isPending ? "Submitting..." : "Submit Application"}

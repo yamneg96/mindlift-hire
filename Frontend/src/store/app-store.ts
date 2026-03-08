@@ -11,9 +11,11 @@ export type AuthUser = {
 type AppState = {
   token: string | null
   user: AuthUser | null
+  adminOtpEmail: string | null
   selectedApplicationId: string | null
   setAuth: (token: string, user: AuthUser) => void
   clearAuth: () => void
+  setAdminOtpEmail: (email: string | null) => void
   setSelectedApplicationId: (id: string | null) => void
 }
 
@@ -22,10 +24,17 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       token: null,
       user: null,
+      adminOtpEmail: null,
       selectedApplicationId: null,
       setAuth: (token, user) => set({ token, user }),
+      setAdminOtpEmail: (email) => set({ adminOtpEmail: email }),
       clearAuth: () =>
-        set({ token: null, user: null, selectedApplicationId: null }),
+        set({
+          token: null,
+          user: null,
+          adminOtpEmail: null,
+          selectedApplicationId: null,
+        }),
       setSelectedApplicationId: (id) => set({ selectedApplicationId: id }),
     }),
     {
@@ -33,6 +42,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         token: state.token,
         user: state.user,
+        adminOtpEmail: state.adminOtpEmail,
         selectedApplicationId: state.selectedApplicationId,
       }),
     }

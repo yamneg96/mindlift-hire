@@ -6,7 +6,6 @@ import cors from "cors";
 import morgan from "morgan";
 
 import { connectDB } from "./config/db.js";
-import { authRoutes } from "./routes/authRoutes.js";
 import { roleRoutes } from "./routes/roleRoutes.js";
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import { adminRoutes } from "./routes/adminRoutes.js";
@@ -557,9 +556,9 @@ app.get("/api", (req, res) => {
           <p class="note">Service health status and runtime check.</p>
         </div>
         <div class="endpoint">
-          <span class="method">RESOURCE</span>
-          <p class="path">/api/auth</p>
-          <p class="note">Authentication and account operations.</p>
+          <span class="method">POST</span>
+          <p class="path">/api/admin/login</p>
+          <p class="note">Send OTP to authorized admin email.</p>
         </div>
         <div class="endpoint">
           <span class="method">RESOURCE</span>
@@ -601,7 +600,8 @@ app.get("/api", (req, res) => {
     base: "/api",
     resources: [
       "/api/health",
-      "/api/auth",
+      "/api/admin/login",
+      "/api/admin/verify-otp",
       "/api/roles",
       "/api/applications",
       "/api/admin",
@@ -848,16 +848,14 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ success: true, message: "MindLift Role API healthy" });
 });
 
-app.use("/api/auth", authRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Alias routes from the instruction's alternate route overview
-app.use("/auth", authRoutes);
 app.use("/roles", roleRoutes);
 app.use("/applications", applicationRoutes);
-app.use("/admin", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
