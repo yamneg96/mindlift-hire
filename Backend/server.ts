@@ -124,11 +124,9 @@ app.get("/", (req, res) => {
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    background: var(--primary);
-    display: grid;
-    place-items: center;
-    color: #ffffff;
-    font-size: 18px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    background: #ffffff;
   }
 
   .status-pill {
@@ -261,7 +259,7 @@ app.get("/", (req, res) => {
 <div class="shell">
   <div class="topbar">
     <div class="brand">
-      <span class="brand-badge">M</span>
+      <img src="/public/MindLift-Logo.jpg" alt="MindLift Logo" class="brand-badge" />
       <span>MindLift Role API</span>
     </div>
     <span class="status-pill">Backend Online</span>
@@ -320,6 +318,7 @@ app.use(
 );
 
 app.use("/uploads", express.static(path.resolve("uploads")));
+app.use("/public", express.static(path.resolve("public")));
 
 app.get("/api", (req, res) => {
   const format = Array.isArray(req.query.format)
@@ -391,9 +390,21 @@ app.get("/api", (req, res) => {
     }
 
     .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 18px;
       font-weight: 800;
       letter-spacing: -0.02em;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #ffffff;
     }
 
     .pill {
@@ -522,7 +533,10 @@ app.get("/api", (req, res) => {
 <body>
   <section class="shell">
     <div class="top">
-      <div class="brand">MindLift API Index</div>
+      <div class="brand">
+        <img src="/public/MindLift-Logo.jpg" alt="MindLift Logo" class="brand-logo" />
+        <span>MindLift API Index</span>
+      </div>
       <span class="pill">Version 1</span>
     </div>
 
@@ -652,6 +666,28 @@ app.get("/api/health", (req, res) => {
       padding: 26px;
     }
 
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .head-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #ffffff;
+    }
+
+    .head-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -765,6 +801,10 @@ app.get("/api/health", (req, res) => {
 </head>
 <body>
   <section class="card">
+    <div class="head">
+      <img src="/public/MindLift-Logo.jpg" alt="MindLift Logo" class="head-logo" />
+      <span class="head-title">MindLift Role API</span>
+    </div>
     <span class="badge">System Healthy</span>
     <h1>MindLift API Health Check</h1>
     <p class="desc">
