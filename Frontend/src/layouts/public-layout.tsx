@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react"
 import { ArrowRight } from "lucide-react"
 
 import { BrandLogo } from "@/components/brand-logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 
 type PublicLayoutProps = PropsWithChildren<{
@@ -43,13 +44,16 @@ export function PublicLayout({ children, onNavigate }: PublicLayoutProps) {
               Admin Login
             </button>
           </nav>
-          <Button
-            className="gap-1"
-            onClick={() => onNavigate("application-form")}
-          >
-            Apply Now
-            <ArrowRight className="size-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              className="gap-1"
+              onClick={() => onNavigate("application-form")}
+            >
+              Apply Now
+              <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </div>
       </header>
       <main>{children}</main>

@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { BrandLogo } from "@/components/brand-logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { adminSidebarItems } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -88,6 +89,7 @@ export function AdminLayout({
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
           <p className="text-sm font-semibold">MindLift Role Portal</p>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               size="sm"
               variant="outline"
