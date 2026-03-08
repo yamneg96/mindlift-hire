@@ -1,8 +1,21 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import multer from "multer";
 
-const uploadRoot = path.resolve("uploads");
+function resolveUploadRoot() {
+  const isServerless =
+    process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+  if (isServerless) {
+    // In serverless runtimes, only /tmp is writable.
+    return path.join(os.tmpdir(), "mindlift-role", "uploads");
+  }
+
+  return path.resolve("uploads");
+}
+
+const uploadRoot = resolveUploadRoot();
 const cvDir = path.join(uploadRoot, "cv");
 const portfolioDir = path.join(uploadRoot, "portfolio");
 
