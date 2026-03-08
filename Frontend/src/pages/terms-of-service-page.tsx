@@ -2,7 +2,7 @@ import { Mail } from "lucide-react"
 
 import { PublicLayout } from "@/layouts/public-layout"
 import { legalSections } from "@/lib/mock-data"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 type Navigate = (

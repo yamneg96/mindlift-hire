@@ -39,17 +39,23 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
   return (
     <PublicLayout onNavigate={onNavigate}>
       <section className="mx-auto w-full max-w-6xl px-4 py-10 md:px-6">
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 md:p-12">
-          <div className="absolute inset-0 bg-linear-to-br from-primary/20 via-transparent to-muted/40" />
-          <div className="relative">
-            <h1 className="max-w-3xl text-4xl font-black tracking-tight md:text-5xl">
+        <div
+          className="relative min-h-[460px] overflow-hidden rounded-2xl border border-border bg-card bg-cover bg-center p-8 md:p-12"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.72)), url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1600&auto=format&fit=crop")',
+          }}
+        >
+          <div className="absolute inset-0 bg-linear-to-br from-primary/30 via-transparent to-background/10" />
+          <div className="relative flex min-h-[380px] flex-col items-center justify-center text-center">
+            <h1 className="max-w-3xl text-4xl font-black tracking-tight text-white md:text-6xl">
               Empower Change with MindLift
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/85 md:text-lg">
               Join our mission to transform mental healthcare accessibility with
               leadership, technical, and operations opportunities.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Button
                 className="gap-1"
                 onClick={() => onNavigate("application-form")}
@@ -57,7 +63,11 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
                 View Open Roles
                 <ArrowRight className="size-4" />
               </Button>
-              <Button variant="outline" onClick={() => onNavigate("about")}>
+              <Button
+                className="border-white/35 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+                variant="outline"
+                onClick={() => onNavigate("about")}
+              >
                 Learn More
               </Button>
             </div>
