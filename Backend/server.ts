@@ -20,6 +20,15 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT ?? 5000);
 
+// Required for platforms like Vercel/NGINX so req.ip and rate limiting work
+// correctly when X-Forwarded-For is present.
+const trustProxySetting = process.env.TRUST_PROXY?.trim();
+if (trustProxySetting) {
+  app.set("trust proxy", trustProxySetting === "true" ? 1 : trustProxySetting);
+} else {
+  app.set("trust proxy", 1);
+}
+
 const allowedOrigins = (process.env.CLIENT_ORIGIN ?? "")
   .split(",")
   .map((origin) => origin.trim())

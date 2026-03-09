@@ -3,9 +3,15 @@ import { z } from "zod"
 import { useAppStore } from "@/store/app-store"
 import { apiEnvelopeSchema } from "@/lib/api/schemas"
 
-const API_BASE =
+const rawApiBase =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   "http://localhost:5000/api"
+
+const normalizedApiBase = rawApiBase.replace(/\/+$/, "")
+
+const API_BASE = /\/api$/i.test(normalizedApiBase)
+  ? normalizedApiBase
+  : `${normalizedApiBase}/api`
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE"
