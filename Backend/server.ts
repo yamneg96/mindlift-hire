@@ -29,35 +29,10 @@ if (trustProxySetting) {
   app.set("trust proxy", 1);
 }
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN ?? "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean)
-  .map((origin) => origin.replace(/\/+$/, ""));
-
 app.use(helmet());
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Non-browser requests (curl, server-to-server) may not send Origin.
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.length === 0 || allowedOrigins.includes("*")) {
-        callback(null, true);
-        return;
-      }
-
-      const normalizedOrigin = origin.replace(/\/+$/, "");
-      if (allowedOrigins.includes(normalizedOrigin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error("CORS: Origin not allowed"));
-    },
+    origin: ["http://localhost:5173", "https://mindlift-hire.vercel.app"],
     credentials: true,
   }),
 );
