@@ -16,6 +16,32 @@ const categories: Array<keyof Applicant["evaluation"]> = [
   "Leadership",
 ]
 
+const statusActions = [
+  {
+    label: "Mark Reviewing",
+    value: "pending",
+    className: "border-border bg-muted text-foreground hover:bg-muted/80",
+  },
+  {
+    label: "Accept",
+    value: "approved",
+    className:
+      "border-primary/30 bg-primary/15 text-primary hover:bg-primary/25",
+  },
+  {
+    label: "Shortlist",
+    value: "shortlisted",
+    className:
+      "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300",
+  },
+  {
+    label: "Reject",
+    value: "rejected",
+    className:
+      "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20",
+  },
+] as const
+
 export function EvaluationPanel({
   applicant,
   applicationId,
@@ -27,6 +53,7 @@ export function EvaluationPanel({
 }) {
   const [scores, setScores] = useState(applicant.evaluation)
   const [notes, setNotes] = useState(applicant.notes)
+  const [currentStatus, setCurrentStatus] = useState(initialStatus)
   const updateMutation = useAdminUpdateApplicationMutation()
 
   const total = useMemo(
@@ -34,7 +61,9 @@ export function EvaluationPanel({
     [scores]
   )
 
-  const saveEvaluation = async () => {
+  const persistEvaluation = async (
+    status: "pending" | "approved" | "rejected" | "shortlisted"
+  ) => {
     const scoreSummary = categories
       .map((category) => `${category}: ${scores[category]}/5`)
       .join(" | ")
@@ -45,13 +74,24 @@ export function EvaluationPanel({
     try {
       await updateMutation.mutateAsync({
         id: applicationId,
-        status: initialStatus,
+        status,
         adminNotes: mergedNotes,
       })
+      setCurrentStatus(status)
       setNotes(mergedNotes)
     } catch {
       // no-op; error shown below
     }
+  }
+
+  const saveEvaluation = async () => {
+    await persistEvaluation(currentStatus)
+  }
+
+  const saveWithStatus = async (
+    status: "pending" | "approved" | "rejected" | "shortlisted"
+  ) => {
+    await persistEvaluation(status)
   }
 
   return (
@@ -88,6 +128,27 @@ export function EvaluationPanel({
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Status Actions</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {statusActions.map((action) => (
+              <Button
+                key={action.value}
+                className={action.className}
+                disabled={updateMutation.isPending}
+                variant="outline"
+                onClick={() => saveWithStatus(action.value)}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Current status:{" "}
+            <span className="font-semibold">{currentStatus}</span>
+          </p>
         </div>
 
         <Button

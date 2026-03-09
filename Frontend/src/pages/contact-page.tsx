@@ -59,13 +59,13 @@ export function ContactPage({ onNavigate }: { onNavigate: Navigate }) {
 
           <div className="space-y-4">
             <Info title="Visit our office" icon={<MapPin className="size-4" />}>
-              123 Empowerment Plaza, San Francisco, CA
+              Addis Ababa, Ethiopia
             </Info>
             <Info title="Email us" icon={<Mail className="size-4" />}>
-              hello@mindliftngo.org
+              mindliftethiopia@gmail.com
             </Info>
             <Info title="Call us" icon={<Phone className="size-4" />}>
-              +1 (555) 123-4567
+              +251923929113
             </Info>
             <Card className="border border-border bg-muted py-0">
               <CardContent className="flex h-48 items-center justify-center p-4 text-sm text-muted-foreground">

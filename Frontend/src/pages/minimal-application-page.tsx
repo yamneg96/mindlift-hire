@@ -74,7 +74,7 @@ export function MinimalApplicationPage({
 
   return (
     <PublicLayout onNavigate={onNavigate}>
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-10">
+      <div className="mx-auto min-h-screen w-full max-w-3xl px-4 py-8 md:px-6 md:py-10">
         <h1 className="text-4xl font-black tracking-tight">Join MindLift</h1>
         <p className="mt-2 text-muted-foreground">
           Fast track application for high-intent candidates.
