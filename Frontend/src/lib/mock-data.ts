@@ -23,7 +23,7 @@ export type Applicant = {
   experience: string[]
   education: string
   motivationLetter: string
-  documents: Array<{ name: string; type: string; size: string }>
+  documents: Array<{ name: string; type: string; size: string; url?: string }>
   notes: string
   evaluation: Record<
     "Experience" | "Education" | "Skills" | "Motivation" | "Leadership",
@@ -34,7 +34,7 @@ export type Applicant = {
 export const adminSidebarItems = [
   "Dashboard",
   "Applicants",
-  "Roles",
+  // "Roles",
   "Notifications",
   "Settings",
 ] as const

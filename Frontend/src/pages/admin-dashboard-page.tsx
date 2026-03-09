@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   BarChart3,
   ClipboardList,
@@ -12,6 +13,16 @@ import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,10 +30,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
 import {
   mapApplicationToApplicant,
   useAdminApplicationsQuery,
   useAdminStatsQuery,
+  useCreateRoleMutation,
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
 import { activityFeed } from "@/lib/mock-data"
@@ -33,7 +46,9 @@ export function AdminDashboardPage({
 }: {
   onNavigate: (
     target:
+      | "admin-login"
       | "admin-dashboard"
+      | "admin-settings"
       | "admin-email"
       | "applicant-list"
       | "applicant-details"
@@ -45,6 +60,14 @@ export function AdminDashboardPage({
   )
   const statsQuery = useAdminStatsQuery(true)
   const recentQuery = useAdminApplicationsQuery({ page: 1, limit: 4 })
+  const createRoleMutation = useCreateRoleMutation()
+
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
+  const [title, setTitle] = useState("")
+  const [department, setDepartment] = useState("")
+  const [description, setDescription] = useState("")
+  const [skillsInput, setSkillsInput] = useState("")
+  const [maxApplicants, setMaxApplicants] = useState("100")
 
   const dashboardStats = [
     {
@@ -68,6 +91,40 @@ export function AdminDashboardPage({
     mapApplicationToApplicant
   )
 
+  const submitNewPosting = async () => {
+    const parsedMax = Number(maxApplicants)
+    if (!title.trim() || !department.trim() || description.trim().length < 10) {
+      return
+    }
+
+    if (!Number.isFinite(parsedMax) || parsedMax <= 0) {
+      return
+    }
+
+    try {
+      await createRoleMutation.mutateAsync({
+        title: title.trim(),
+        department: department.trim(),
+        description: description.trim(),
+        requiredSkills: skillsInput
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        status: "open",
+        maxApplicants: Math.round(parsedMax),
+      })
+
+      setTitle("")
+      setDepartment("")
+      setDescription("")
+      setSkillsInput("")
+      setMaxApplicants("100")
+      setIsRoleDialogOpen(false)
+    } catch {
+      // no-op; error is shown in modal
+    }
+  }
+
   return (
     <AdminLayout current="dashboard" onNavigate={onNavigate}>
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -77,11 +134,88 @@ export function AdminDashboardPage({
             Overview of applications and role activity.
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsRoleDialogOpen(true)}>
           <PlusCircle className="size-4" />
           New Posting
         </Button>
       </header>
+
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Create New Posting</DialogTitle>
+            <DialogDescription>
+              Publish a role so it appears in the landing and application pages.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Role Title</Label>
+              <Input
+                placeholder="Community Program Manager"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Department</Label>
+              <Input
+                placeholder="Operations"
+                value={department}
+                onChange={(event) => setDepartment(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                className="min-h-24"
+                placeholder="Describe the role and responsibilities"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Required Skills (comma separated)</Label>
+                <Input
+                  placeholder="Counseling, Program Design"
+                  value={skillsInput}
+                  onChange={(event) => setSkillsInput(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Applicants</Label>
+                <Input
+                  inputMode="numeric"
+                  min={1}
+                  placeholder="100"
+                  type="number"
+                  value={maxApplicants}
+                  onChange={(event) => setMaxApplicants(event.target.value)}
+                />
+              </div>
+            </div>
+            {createRoleMutation.isError ? (
+              <p className="text-sm text-destructive">
+                {(createRoleMutation.error as Error).message}
+              </p>
+            ) : null}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={createRoleMutation.isPending}
+              onClick={submitNewPosting}
+            >
+              {createRoleMutation.isPending ? "Publishing..." : "Publish Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {dashboardStats.map((stat, index) => (

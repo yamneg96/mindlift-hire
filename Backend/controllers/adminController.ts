@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 
 import { AdminNoteModel } from "../models/AdminNote.js";
 import { ApplicationModel } from "../models/Application.js";
@@ -132,9 +133,13 @@ export async function updateApplicationByAdmin(req: Request, res: Response) {
   await application.save();
 
   if (body.adminNotes?.trim()) {
+    const actorId = req.user.id;
+    const hasObjectIdAdmin = mongoose.Types.ObjectId.isValid(actorId);
+
     await AdminNoteModel.create({
       applicationId: application._id,
-      adminId: req.user.id,
+      ...(hasObjectIdAdmin ? { adminId: actorId } : {}),
+      adminEmail: req.user.email,
       note: body.adminNotes,
     });
   }

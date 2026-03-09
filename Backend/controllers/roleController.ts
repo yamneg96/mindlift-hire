@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 
 import { RoleModel } from "../models/Role.js";
 import { createRoleSchema, updateRoleSchema } from "../zod/role.js";
@@ -22,9 +23,13 @@ export async function createRole(req: Request, res: Response) {
     req.body,
   );
 
+  const creatorId = req.user.id;
+  const hasObjectIdCreator = mongoose.Types.ObjectId.isValid(creatorId);
+
   const role = await RoleModel.create({
     ...body,
-    createdBy: req.user.id,
+    ...(hasObjectIdCreator ? { createdBy: creatorId } : {}),
+    createdByEmail: req.user.email,
   });
 
   return sendSuccess(res, role, "Role created", 201);

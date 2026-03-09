@@ -8,7 +8,8 @@ const roleSchema = new Schema(
     requiredSkills: { type: [String], default: [] },
     status: { type: String, enum: ["open", "closed"], default: "open" },
     maxApplicants: { type: Number, default: 100 },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    createdByEmail: { type: String, trim: true, lowercase: true },
   },
   { timestamps: true },
 );

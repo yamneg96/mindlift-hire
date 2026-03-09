@@ -7,10 +7,12 @@ export function DocumentPreviewCard({
   name,
   type,
   size,
+  url,
 }: {
   name: string
   type: string
   size: string
+  url?: string
 }) {
   return (
     <Card className="border border-border bg-card py-0">
@@ -26,7 +28,18 @@ export function DocumentPreviewCard({
             </p>
           </div>
         </div>
-        <Button size="icon-sm" variant="outline">
+        <Button
+          disabled={!url}
+          size="icon-sm"
+          variant="outline"
+          onClick={() => {
+            if (!url) {
+              return
+            }
+
+            window.open(url, "_blank", "noopener,noreferrer")
+          }}
+        >
           <Eye className="size-4" />
         </Button>
       </CardContent>

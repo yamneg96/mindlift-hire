@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { apiRequest } from "@/lib/api/client"
@@ -21,6 +21,29 @@ export function useRolesQuery() {
   return useQuery({
     queryKey: ["roles", "open"],
     queryFn: () => apiRequest("/roles", roleListSchema),
+  })
+}
+
+export function useCreateRoleMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: {
+      title: string
+      description: string
+      department: string
+      requiredSkills: string[]
+      status: "open" | "closed"
+      maxApplicants: number
+    }) =>
+      apiRequest("/roles", roleSchema, {
+        method: "POST",
+        body: payload,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+    },
   })
 }
 
@@ -144,6 +167,32 @@ export function useAdminSendEmailMutation() {
   })
 }
 
+export function useAdminUpdateApplicationMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: {
+      id: string
+      status: "pending" | "approved" | "rejected" | "shortlisted"
+      adminNotes?: string
+      pipelineStage?: "Applied" | "Screening" | "Interview" | "Final Decision"
+    }) =>
+      apiRequest(`/admin/applications/${payload.id}`, applicationItemSchema, {
+        method: "PATCH",
+        body: {
+          status: payload.status,
+          adminNotes: payload.adminNotes,
+          pipelineStage: payload.pipelineStage,
+        },
+      }),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "applications"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+      queryClient.setQueryData(["application", updated._id], updated)
+    },
+  })
+}
+
 export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
   const rawRole = item.roleId
 
@@ -194,7 +243,24 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
     ],
     education: "Not provided",
     motivationLetter: item.motivationLetter,
-    documents: [{ name: "CV", type: "PDF/DOCX", size: "Uploaded" }],
+    documents: [
+      {
+        name: "CV",
+        type: "PDF/DOCX",
+        size: "Uploaded",
+        url: item.cvUrl,
+      },
+      ...(item.portfolioUrl
+        ? [
+            {
+              name: "Portfolio",
+              type: "File",
+              size: "Uploaded",
+              url: item.portfolioUrl,
+            },
+          ]
+        : []),
+    ],
     notes: item.adminNotes ?? "",
     evaluation: {
       Experience: 3,

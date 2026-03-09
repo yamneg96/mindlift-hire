@@ -16,7 +16,9 @@ export function ApplicantListPage({
 }: {
   onNavigate: (
     target:
+      | "admin-login"
       | "admin-dashboard"
+      | "admin-settings"
       | "admin-email"
       | "applicant-list"
       | "applicant-details"

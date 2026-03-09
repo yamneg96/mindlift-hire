@@ -12,7 +12,15 @@ import { FormSection } from "@/components/form-section"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useRolesQuery } from "@/lib/api/hooks"
 
 const stepNames = [
   "Personal Info",
@@ -24,6 +32,8 @@ const stepNames = [
 
 export function MultiStepApplicationForm() {
   const [step, setStep] = useState(0)
+  const [roleId, setRoleId] = useState("")
+  const rolesQuery = useRolesQuery()
 
   const progress = useMemo(() => ((step + 1) / stepNames.length) * 100, [step])
 
@@ -71,7 +81,29 @@ export function MultiStepApplicationForm() {
           title="Professional Info"
         >
           <div className="space-y-4">
-            <Field label="Role Selection" placeholder="Project Coordinator" />
+            <div className="space-y-2">
+              <Label>Role Selection</Label>
+              {rolesQuery.isLoading ? (
+                <div className="h-10 animate-pulse rounded-lg border border-border bg-muted/40" />
+              ) : (rolesQuery.data ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No open roles available yet.
+                </p>
+              ) : (
+                <Select value={roleId} onValueChange={setRoleId}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(rolesQuery.data ?? []).map((role) => (
+                      <SelectItem key={role._id} value={role._id}>
+                        {role.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <Field
               label="Core Skills"
               placeholder="Program design, Facilitation"

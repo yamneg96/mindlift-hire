@@ -20,8 +20,8 @@ const applicationSchema = new Schema(
     portfolioUrl: { type: String, default: "" },
     motivationLetter: { type: String, required: true },
     additionalAnswers: {
-      experienceLevel: { type: String, required: true },
-      availability: { type: String, required: true },
+      experienceLevel: { type: String, default: "" },
+      availability: { type: String, default: "" },
       expectedContribution: { type: String, default: "" },
     },
     status: {

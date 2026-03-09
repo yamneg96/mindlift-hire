@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { Mail, Send } from "lucide-react"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,12 +14,16 @@ import {
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
 
+const emailSchema = z.string().email()
+
 export function AdminEmailPage({
   onNavigate,
 }: {
   onNavigate: (
     target:
+      | "admin-login"
       | "admin-dashboard"
+      | "admin-settings"
       | "admin-email"
       | "applicant-list"
       | "applicant-details"
@@ -29,6 +34,7 @@ export function AdminEmailPage({
   const sendEmailMutation = useAdminSendEmailMutation()
 
   const [selectedEmails, setSelectedEmails] = useState<string[]>([])
+  const [manualRecipientsInput, setManualRecipientsInput] = useState("")
   const [subject, setSubject] = useState("MindLift Application Update")
   const [message, setMessage] = useState(
     "Thank you for applying to MindLift. We are currently reviewing applications and will contact shortlisted candidates shortly."
@@ -37,6 +43,28 @@ export function AdminEmailPage({
   const applicants = useMemo(
     () => (applicationsQuery.data?.items ?? []).map(mapApplicationToApplicant),
     [applicationsQuery.data?.items]
+  )
+
+  const manualRecipients = useMemo(() => {
+    const tokens = manualRecipientsInput
+      .split(/[\n,;\s]+/)
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+
+    const valid = tokens.filter((email) => emailSchema.safeParse(email).success)
+    const invalid = tokens.filter(
+      (email) => !emailSchema.safeParse(email).success
+    )
+
+    return {
+      valid: Array.from(new Set(valid)),
+      invalid: Array.from(new Set(invalid)),
+    }
+  }, [manualRecipientsInput])
+
+  const allRecipients = useMemo(
+    () => Array.from(new Set([...selectedEmails, ...manualRecipients.valid])),
+    [manualRecipients.valid, selectedEmails]
   )
 
   const toggleEmail = (email: string) => {
@@ -48,13 +76,17 @@ export function AdminEmailPage({
   }
 
   const send = async () => {
-    if (selectedEmails.length === 0 || message.trim().length < 10) {
+    if (allRecipients.length === 0 || message.trim().length < 10) {
+      return
+    }
+
+    if (manualRecipients.invalid.length > 0) {
       return
     }
 
     try {
       await sendEmailMutation.mutateAsync({
-        recipients: selectedEmails,
+        recipients: allRecipients,
         subject,
         body: message,
       })
@@ -130,7 +162,26 @@ export function AdminEmailPage({
           <CardContent className="space-y-4 p-5">
             <div className="space-y-2">
               <Label>Recipients</Label>
-              <Input disabled value={`${selectedEmails.length} selected`} />
+              <Input
+                disabled
+                value={`${allRecipients.length} total (${selectedEmails.length} selected + ${manualRecipients.valid.length} manual)`}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Add Recipients Manually</Label>
+              <Textarea
+                className="min-h-20"
+                placeholder="Type one or more emails, separated by comma, space, or new line"
+                value={manualRecipientsInput}
+                onChange={(event) =>
+                  setManualRecipientsInput(event.target.value)
+                }
+              />
+              {manualRecipients.invalid.length > 0 ? (
+                <p className="text-xs text-destructive">
+                  Invalid emails: {manualRecipients.invalid.join(", ")}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label>Subject</Label>
@@ -152,7 +203,7 @@ export function AdminEmailPage({
             <Button
               className="w-full gap-2"
               disabled={
-                sendEmailMutation.isPending || selectedEmails.length === 0
+                sendEmailMutation.isPending || allRecipients.length === 0
               }
               onClick={send}
             >

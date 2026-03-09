@@ -17,7 +17,9 @@ export function ApplicantDetailsPage({
 }: {
   onNavigate: (
     target:
+      | "admin-login"
       | "admin-dashboard"
+      | "admin-settings"
       | "admin-email"
       | "applicant-list"
       | "applicant-details"
@@ -117,6 +119,7 @@ export function ApplicantDetailsPage({
                       name={doc.name}
                       size={doc.size}
                       type={doc.type}
+                      url={doc.url}
                     />
                   ))}
                 </CardContent>
@@ -136,7 +139,11 @@ export function ApplicantDetailsPage({
             </div>
 
             <div className="space-y-5 lg:col-span-5">
-              <EvaluationPanel applicant={applicant} />
+              <EvaluationPanel
+                applicant={applicant}
+                applicationId={applicant.id}
+                initialStatus={detailsQuery.data?.status ?? "pending"}
+              />
             </div>
           </div>
         </>
