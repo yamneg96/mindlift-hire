@@ -9,6 +9,7 @@ import { connectDB } from "./config/db.js";
 import { roleRoutes } from "./routes/roleRoutes.js";
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import { adminRoutes } from "./routes/adminRoutes.js";
+import { authRoutes } from "./routes/authRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 const require = createRequire(import.meta.url);
@@ -28,6 +29,7 @@ function normalizeOrigin(value: string): string {
 }
 
 const defaultAllowedOrigins = [
+  "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://mindlift-hire.vercel.app",
@@ -868,11 +870,13 @@ app.get("/api/health", (req, res) => {
 app.use("/api/roles", roleRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/auth", authRoutes);
 
 // Alias routes from the instruction's alternate route overview
 app.use("/roles", roleRoutes);
 app.use("/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/auth", authRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

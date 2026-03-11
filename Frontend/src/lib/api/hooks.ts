@@ -9,6 +9,7 @@ import {
   adminApplicationsSchema,
   adminStatsSchema,
   applicationItemSchema,
+  googleAuthResponseSchema,
   roleSchema,
   type ApplicationItemApi,
 } from "@/lib/api/schemas"
@@ -173,6 +174,21 @@ export function useAdminVerifyOtpMutation() {
   return useMutation({
     mutationFn: (payload: { email: string; otp: string }) =>
       apiRequest("/admin/verify-otp", adminVerifyOtpResponseSchema, {
+        method: "POST",
+        body: payload,
+      }),
+    onSuccess: (result) => {
+      setAuth(result.token, result.user)
+    },
+  })
+}
+
+export function useGoogleAuthMutation() {
+  const setAuth = useAppStore((state) => state.setAuth)
+
+  return useMutation({
+    mutationFn: (payload: { credential: string }) =>
+      apiRequest("/auth/google", googleAuthResponseSchema, {
         method: "POST",
         body: payload,
       }),

@@ -1,22 +1,34 @@
 import { useState, type ReactNode } from "react"
 import { Lock, Mail } from "lucide-react"
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google"
 
 import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAdminLoginOtpMutation } from "@/lib/api/hooks"
+import {
+  useAdminLoginOtpMutation,
+  useGoogleAuthMutation,
+} from "@/lib/api/hooks"
 import { useAppStore } from "@/store/app-store"
 
 export function AdminLoginPage({
   onNavigate,
 }: {
-  onNavigate: (target: "admin-verify-otp" | "landing") => void
+  onNavigate: (
+    target: "admin-verify-otp" | "admin-dashboard" | "landing"
+  ) => void
 }) {
   const [email, setEmail] = useState("admin@mindlift.com")
+  const [googleError, setGoogleError] = useState("")
   const setAdminOtpEmail = useAppStore((state) => state.setAdminOtpEmail)
   const loginOtpMutation = useAdminLoginOtpMutation()
+  const googleAuthMutation = useGoogleAuthMutation()
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
+    | string
+    | undefined
+  const showFallback = !googleClientId || Boolean(googleError)
 
   const submitLoginOtp = async () => {
     try {
@@ -25,6 +37,21 @@ export function AdminLoginPage({
       onNavigate("admin-verify-otp")
     } catch {
       // no-op; message shown below
+    }
+  }
+
+  const loginWithGoogle = async (response: CredentialResponse) => {
+    if (!response.credential) {
+      setGoogleError("Google credential missing. Please try again.")
+      return
+    }
+
+    setGoogleError("")
+    try {
+      await googleAuthMutation.mutateAsync({ credential: response.credential })
+      onNavigate("admin-dashboard")
+    } catch (error) {
+      setGoogleError((error as Error).message)
     }
   }
 
@@ -41,35 +68,78 @@ export function AdminLoginPage({
               onClick={() => onNavigate("landing")}
             />
             <p className="mt-4 text-sm text-muted-foreground">
-              Enter your authorized admin email and we will send a one-time
-              verification code.
+              Continue with your authorized Google account. One Tap will prompt
+              "Continue as" automatically when available.
             </p>
           </div>
           <CardContent className="space-y-4 p-6">
-            <Field
-              icon={<Mail className="size-4" />}
-              label="Email"
-              placeholder="admin@mindlift.com"
-              type="email"
-              value={email}
-              onChange={setEmail}
-            />
-            <Button
-              className="w-full"
-              disabled={loginOtpMutation.isPending}
-              onClick={submitLoginOtp}
-            >
-              {loginOtpMutation.isPending ? "Sending OTP..." : "Send OTP"}
-            </Button>
-            {loginOtpMutation.isError ? (
-              <p className="text-sm text-destructive">
-                {(loginOtpMutation.error as Error).message}
+            <div className="space-y-2">
+              <Label>Google Sign-In (Primary)</Label>
+              {googleClientId ? (
+                <div className="overflow-hidden rounded-lg border border-border p-3">
+                  <GoogleLogin
+                    onSuccess={loginWithGoogle}
+                    onError={() => setGoogleError("Google sign-in failed")}
+                    shape="pill"
+                    size="large"
+                    text="continue_with"
+                    useOneTap
+                    width="100%"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-destructive">
+                  Missing VITE_GOOGLE_CLIENT_ID. Configure it to enable One Tap.
+                </p>
+              )}
+            </div>
+            {googleAuthMutation.isPending ? (
+              <p className="text-sm text-muted-foreground">
+                Verifying Google identity...
               </p>
             ) : null}
-            {loginOtpMutation.isSuccess ? (
-              <p className="text-sm text-primary">
-                OTP sent. Continue to verification.
-              </p>
+            {googleError ? (
+              <p className="text-sm text-destructive">{googleError}</p>
+            ) : null}
+
+            {showFallback ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs tracking-wide text-muted-foreground uppercase">
+                    Fallback
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <Field
+                  icon={<Mail className="size-4" />}
+                  label="Email"
+                  placeholder="admin@mindlift.com"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                />
+                <Button
+                  className="w-full"
+                  disabled={loginOtpMutation.isPending}
+                  onClick={submitLoginOtp}
+                >
+                  {loginOtpMutation.isPending
+                    ? "Sending OTP..."
+                    : "Send OTP (Fallback)"}
+                </Button>
+                {loginOtpMutation.isError ? (
+                  <p className="text-sm text-destructive">
+                    {(loginOtpMutation.error as Error).message}
+                  </p>
+                ) : null}
+                {loginOtpMutation.isSuccess ? (
+                  <p className="text-sm text-primary">
+                    OTP sent. Continue to verification.
+                  </p>
+                ) : null}
+              </>
             ) : null}
             <Button
               className="w-full"

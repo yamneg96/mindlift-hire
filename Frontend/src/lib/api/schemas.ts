@@ -31,6 +31,8 @@ export const loginResponseSchema = z.object({
   user: authUserSchema,
 })
 
+export const googleAuthResponseSchema = loginResponseSchema
+
 export const adminLoginOtpResponseSchema = z.object({
   email: z.string().email(),
   otpSent: z.boolean(),

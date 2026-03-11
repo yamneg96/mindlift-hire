@@ -196,7 +196,11 @@ export function App() {
           <AdminLoginPage
             onNavigate={(target) =>
               goTo(
-                target === "admin-verify-otp" ? "admin-verify-otp" : "landing"
+                target === "admin-verify-otp"
+                  ? "admin-verify-otp"
+                  : target === "admin-dashboard"
+                    ? "admin-dashboard"
+                    : "landing"
               )
             }
           />
