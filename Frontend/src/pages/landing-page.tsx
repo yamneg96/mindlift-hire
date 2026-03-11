@@ -32,6 +32,7 @@ type Navigate = (
 
 export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
   const { data: roles, isLoading } = usePublicRolesQuery(true)
+  console.log(roles)
   const setSelectedRoleId = useAppStore((state) => state.setSelectedRoleId)
   const [showAllRoles, setShowAllRoles] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
