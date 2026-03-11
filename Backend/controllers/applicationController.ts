@@ -18,17 +18,22 @@ function isRoleApplicationEnabled() {
 
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
-  const base = process.env.UPLOAD_BASE_URL ?? "";
+  const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
+  const base =
+    configuredBase && !configuredBase.includes("mindlift-backend.vercel")
+      ? configuredBase
+      : "https://mindlift-hire.vercel.app";
+  const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
-    return `${base}${normalized}`;
+    return `${normalizedBase}${normalized}`;
   }
 
   const uploadsIndex = normalized.indexOf("uploads/");
   if (uploadsIndex >= 0) {
-    return `${base}/${normalized.slice(uploadsIndex)}`;
+    return `${normalizedBase}/${normalized.slice(uploadsIndex)}`;
   }
 
-  return `${base}/${path.basename(normalized)}`;
+  return `${normalizedBase}/${path.basename(normalized)}`;
 }
 
 export async function applyForRole(req: Request, res: Response) {

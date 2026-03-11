@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://mindlift-backend.vercel.app/api/$1"
+      "destination": "https://mindlift-hire.vercel.app/api/$1"
     },
     {
       "source": "/(.*)",
