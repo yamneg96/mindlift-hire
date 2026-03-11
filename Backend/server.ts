@@ -20,6 +20,15 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT ?? 5000);
 
+const allowedOrigins = (
+  process.env.CORS_ORIGIN ??
+  process.env.CLIENT_ORIGIN ??
+  "http://localhost:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 // Required for platforms like Vercel/NGINX so req.ip and rate limiting work
 // correctly when X-Forwarded-For is present.
 const trustProxySetting = process.env.TRUST_PROXY?.trim();
@@ -32,7 +41,14 @@ if (trustProxySetting) {
 app.use(helmet());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://mindlift-hire.vercel.app", "https://mindlift-backend.vercel.com"],
+    origin: (origin, callback) => {
+      // Allow non-browser clients (no Origin header) and configured browser origins.
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   }),
 );
