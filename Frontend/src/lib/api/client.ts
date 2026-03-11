@@ -5,7 +5,7 @@ import { apiEnvelopeSchema } from "@/lib/api/schemas"
 
 const rawApiBase =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:5000/api"
+  "https://mindlift-backend.vercel.com/api"
 
 const normalizedApiBase = rawApiBase.replace(/\/+$/, "")
 
