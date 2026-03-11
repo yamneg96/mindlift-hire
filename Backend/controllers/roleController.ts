@@ -13,13 +13,17 @@ import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 import { uploadBufferToCloudStorage } from "../config/cloudStorage.js";
 
-function buildPublicFileUrl(filePath: string) {
+function buildPublicFileUrl(req: Request, filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
   // Local uploads should never be prefixed with Cloudinary base URLs.
+  const requestBase = `${req.protocol}://${req.get("host") ?? ""}`.replace(
+    /\/$/,
+    "",
+  );
   const base = /res\.cloudinary\.com/i.test(configuredBase)
     ? ""
-    : configuredBase;
+    : configuredBase || requestBase;
   const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
     return normalizedBase ? `${normalizedBase}${normalized}` : normalized;
@@ -43,8 +47,13 @@ async function resolveRoleImageUrl(req: Request): Promise<string | undefined> {
     return undefined;
   }
 
+  const cloudCredentialsConfigured =
+    Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
+    Boolean(process.env.CLOUDINARY_API_KEY) &&
+    Boolean(process.env.CLOUDINARY_API_SECRET);
   const useCloud =
-    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false";
+    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false" &&
+    cloudCredentialsConfigured;
 
   if (useCloud) {
     const fileBuffer = await fs.readFile(imageFile.path);
@@ -60,7 +69,7 @@ async function resolveRoleImageUrl(req: Request): Promise<string | undefined> {
     }
   }
 
-  return buildPublicFileUrl(imageFile.path);
+  return buildPublicFileUrl(req, imageFile.path);
 }
 
 export async function listRoles(req: Request, res: Response) {

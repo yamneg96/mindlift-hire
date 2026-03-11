@@ -16,13 +16,17 @@ function isRoleApplicationEnabled() {
   );
 }
 
-function buildPublicFileUrl(filePath: string) {
+function buildPublicFileUrl(req: Request, filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
   // Local uploads should never be prefixed with Cloudinary base URLs.
+  const requestBase = `${req.protocol}://${req.get("host") ?? ""}`.replace(
+    /\/$/,
+    "",
+  );
   const base = /res\.cloudinary\.com/i.test(configuredBase)
     ? ""
-    : configuredBase;
+    : configuredBase || requestBase;
   const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
     return normalizedBase ? `${normalizedBase}${normalized}` : normalized;
@@ -108,17 +112,22 @@ export async function applyForRole(req: Request, res: Response) {
     return sendError(res, "Duplicate application for this role", 409);
   }
 
+  const cloudCredentialsConfigured =
+    Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
+    Boolean(process.env.CLOUDINARY_API_KEY) &&
+    Boolean(process.env.CLOUDINARY_API_SECRET);
   const useCloud =
-    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false";
+    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false" &&
+    cloudCredentialsConfigured;
   const cvUrl = useCloud
     ? await uploadToCloudStorage(cvFile.path, "cv")
-    : buildPublicFileUrl(cvFile.path);
+    : buildPublicFileUrl(req, cvFile.path);
 
   let portfolioUrl = "";
   if (portfolioFile) {
     portfolioUrl = useCloud
       ? await uploadToCloudStorage(portfolioFile.path, "portfolio")
-      : buildPublicFileUrl(portfolioFile.path);
+      : buildPublicFileUrl(req, portfolioFile.path);
   }
 
   const application = await ApplicationModel.create({
