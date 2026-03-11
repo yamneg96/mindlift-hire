@@ -96,6 +96,8 @@ export const applicationItemSchema = z.object({
   availability: z.string().optional().default(""),
   userId: z.union([z.string(), populatedUserSchema]).optional(),
   roleId: z.union([z.string(), populatedRoleSchema]).optional(),
+  secondRoleId: z.union([z.string(), populatedRoleSchema]).optional(),
+  thirdRoleId: z.union([z.string(), populatedRoleSchema]).optional(),
   cvUrl: z.string(),
   portfolioUrl: z.string().optional().default(""),
   motivationLetter: z.string(),

@@ -21,7 +21,9 @@ const applicationSchema = new Schema(
       enum: ["role", "job"],
       default: "role",
     },
-    roleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
+    roleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
+    secondRoleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
+    thirdRoleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
     cvUrl: { type: String, required: true },
     portfolioUrl: { type: String, default: "" },
     motivationLetter: { type: String, default: "" },
@@ -49,6 +51,8 @@ const applicationSchema = new Schema(
 
 applicationSchema.index({ roleId: 1, status: 1, appliedAt: -1 });
 applicationSchema.index({ applicantEmail: 1, roleId: 1 });
+applicationSchema.index({ secondRoleId: 1, status: 1, appliedAt: -1 });
+applicationSchema.index({ thirdRoleId: 1, status: 1, appliedAt: -1 });
 applicationSchema.index({ applicationType: 1, status: 1, appliedAt: -1 });
 
 export type ApplicationDocument = InferSchemaType<typeof applicationSchema>;

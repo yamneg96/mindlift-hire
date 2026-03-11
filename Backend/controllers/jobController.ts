@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
+import fs from "node:fs/promises";
 import path from "node:path";
 
 import { JobModel } from "../models/Job.js";
 import { createJobSchema, updateJobSchema } from "../zod/job.js";
 import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
-import { uploadToCloudStorage } from "../config/cloudStorage.js";
+import { uploadBufferToCloudStorage } from "../config/cloudStorage.js";
 
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
@@ -33,7 +34,17 @@ async function resolveJobImageUrl(req: Request): Promise<string | undefined> {
     String(process.env.USE_CLOUD_STORAGE).toLowerCase() === "true";
 
   if (useCloud) {
-    return uploadToCloudStorage(imageFile.path, "ml-role-image");
+    const fileBuffer = await fs.readFile(imageFile.path);
+    try {
+      return await uploadBufferToCloudStorage({
+        file: fileBuffer,
+        fileName: `job_image_${Date.now()}`,
+        folder: "/ml-job-image",
+        resourceType: "image",
+      });
+    } finally {
+      await fs.unlink(imageFile.path).catch(() => undefined);
+    }
   }
 
   return buildPublicFileUrl(imageFile.path);

@@ -23,6 +23,8 @@ export function MultiStepApplicationForm({
   onRoleChange?: (roleId: string) => void
 }) {
   const [roleId, setRoleId] = useState("")
+  const [secondRoleId, setSecondRoleId] = useState("")
+  const [thirdRoleId, setThirdRoleId] = useState("")
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -38,6 +40,19 @@ export function MultiStepApplicationForm({
     [roleId, rolesQuery.data]
   )
 
+  const secondRoleOptions = useMemo(
+    () => (rolesQuery.data ?? []).filter((role) => role._id !== roleId),
+    [roleId, rolesQuery.data]
+  )
+
+  const thirdRoleOptions = useMemo(
+    () =>
+      (rolesQuery.data ?? []).filter(
+        (role) => role._id !== roleId && role._id !== secondRoleId
+      ),
+    [roleId, secondRoleId, rolesQuery.data]
+  )
+
   useEffect(() => {
     if (!initialRoleId) {
       return
@@ -49,13 +64,27 @@ export function MultiStepApplicationForm({
     onRoleChange?.(roleId)
   }, [onRoleChange, roleId])
 
+  useEffect(() => {
+    if (secondRoleId && secondRoleId === roleId) {
+      setSecondRoleId("")
+    }
+    if (
+      thirdRoleId &&
+      (thirdRoleId === roleId || thirdRoleId === secondRoleId)
+    ) {
+      setThirdRoleId("")
+    }
+  }, [roleId, secondRoleId, thirdRoleId])
+
   const canSubmit = Boolean(
-    ROLE_APPLICATIONS_ENABLED && fullName && email && cv
+    ROLE_APPLICATIONS_ENABLED && roleId && fullName && email && cv
   )
 
   const submit = async () => {
     if (!canSubmit || !cv) {
-      setLocalError("Please complete full name, email, and CV.")
+      setLocalError(
+        "Please complete first role choice, full name, email, and CV."
+      )
       return
     }
 
@@ -73,6 +102,8 @@ export function MultiStepApplicationForm({
     await applyMutation.mutateAsync({
       applicationType: "role",
       roleId,
+      secondRoleId: secondRoleId || undefined,
+      thirdRoleId: thirdRoleId || undefined,
       fullName,
       email,
       phone,
@@ -129,7 +160,7 @@ export function MultiStepApplicationForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Role Selection (Optional)</Label>
+          <Label>First Role Choice (Required)</Label>
           {rolesQuery.isLoading ? (
             <div className="h-10 animate-pulse rounded-lg border border-border bg-muted/40" />
           ) : (rolesQuery.data ?? []).length === 0 ? (
@@ -139,7 +170,7 @@ export function MultiStepApplicationForm({
           ) : (
             <Select value={roleId} onValueChange={setRoleId}>
               <SelectTrigger className="h-10 w-full">
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder="Select first choice" />
               </SelectTrigger>
               <SelectContent>
                 {(rolesQuery.data ?? []).map((role) => (
@@ -152,10 +183,62 @@ export function MultiStepApplicationForm({
           )}
           {selectedRole ? (
             <p className="text-xs text-muted-foreground">
-              Selected:{" "}
+              First choice:{" "}
               <span className="font-semibold">{selectedRole.title}</span>
             </p>
           ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Second Role Choice (Optional)</Label>
+          {(rolesQuery.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No roles available.</p>
+          ) : (
+            <Select
+              value={secondRoleId || "none"}
+              onValueChange={(value) =>
+                setSecondRoleId(value === "none" ? "" : value)
+              }
+            >
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue placeholder="Select second choice" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No second choice</SelectItem>
+                {secondRoleOptions.map((role) => (
+                  <SelectItem key={role._id} value={role._id}>
+                    {role.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Third Role Choice (Optional)</Label>
+          {(rolesQuery.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No roles available.</p>
+          ) : (
+            <Select
+              value={thirdRoleId || "none"}
+              onValueChange={(value) =>
+                setThirdRoleId(value === "none" ? "" : value)
+              }
+            >
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue placeholder="Select third choice" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No third choice</SelectItem>
+                {thirdRoleOptions.map((role) => (
+                  <SelectItem key={role._id} value={role._id}>
+                    {role.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="space-y-2">
           <Label>CV Upload</Label>

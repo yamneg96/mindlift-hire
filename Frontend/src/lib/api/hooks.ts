@@ -295,7 +295,9 @@ export function useApplyMutation() {
   return useMutation({
     mutationFn: (payload: {
       applicationType?: "role" | "job"
-      roleId?: string
+      roleId: string
+      secondRoleId?: string
+      thirdRoleId?: string
       fullName: string
       email: string
       phone?: string
@@ -311,8 +313,12 @@ export function useApplyMutation() {
     }) => {
       const formData = new FormData()
       formData.append("applicationType", payload.applicationType ?? "role")
-      if (payload.roleId) {
-        formData.append("roleId", payload.roleId)
+      formData.append("roleId", payload.roleId)
+      if (payload.secondRoleId) {
+        formData.append("secondRoleId", payload.secondRoleId)
+      }
+      if (payload.thirdRoleId) {
+        formData.append("thirdRoleId", payload.thirdRoleId)
       }
       formData.append("fullName", payload.fullName)
       formData.append("email", payload.email)

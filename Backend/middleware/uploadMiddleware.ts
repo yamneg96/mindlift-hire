@@ -25,6 +25,7 @@ function ensureUploadDirs() {
       path.join(root, "cv"),
       path.join(root, "portfolio"),
       path.join(root, "ml-role-image"),
+      path.join(root, "ml-job-image"),
     ];
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) {

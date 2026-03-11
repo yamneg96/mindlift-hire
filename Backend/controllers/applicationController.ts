@@ -56,30 +56,47 @@ export async function applyForRole(req: Request, res: Response) {
     return sendError(res, "CV file is required", 400);
   }
 
-  let role: { _id: string; title?: string; status?: string } | null = null;
-  if (body.roleId) {
-    const [foundRole] = await RoleModel.find({ _id: body.roleId })
-      .select("_id status title")
-      .limit(1)
-      .lean();
-    if (!foundRole || foundRole.status !== "open") {
-      return sendError(res, "Role not available", 404);
+  const selectedRoleIds = [body.roleId, body.secondRoleId, body.thirdRoleId]
+    .filter(Boolean)
+    .map(String);
+
+  if (new Set(selectedRoleIds).size !== selectedRoleIds.length) {
+    return sendError(res, "Role choices must be unique", 400);
+  }
+
+  const foundRoles = await RoleModel.find({ _id: { $in: selectedRoleIds } })
+    .select("_id status title")
+    .lean();
+
+  const roleMap = new Map(foundRoles.map((item) => [String(item._id), item]));
+  for (const selectedRoleId of selectedRoleIds) {
+    const selectedRole = roleMap.get(selectedRoleId);
+    if (!selectedRole || selectedRole.status !== "open") {
+      return sendError(
+        res,
+        "One or more selected roles are not available",
+        404,
+      );
     }
+  }
 
-    role = {
-      _id: String(foundRole._id),
-      status: foundRole.status,
-      title: foundRole.title,
-    };
+  const primaryRole = roleMap.get(String(body.roleId));
+  const role: { _id: string; title?: string; status?: string } | null =
+    primaryRole
+      ? {
+          _id: String(primaryRole._id),
+          status: primaryRole.status,
+          title: primaryRole.title,
+        }
+      : null;
 
-    const existing = await ApplicationModel.findOne({
-      applicantEmail: body.email.toLowerCase(),
-      roleId: body.roleId,
-    }).lean();
+  const existing = await ApplicationModel.findOne({
+    applicantEmail: body.email.toLowerCase(),
+    roleId: body.roleId,
+  }).lean();
 
-    if (existing) {
-      return sendError(res, "Duplicate application for this role", 409);
-    }
+  if (existing) {
+    return sendError(res, "Duplicate application for this role", 409);
   }
 
   const useCloud =
@@ -105,7 +122,9 @@ export async function applyForRole(req: Request, res: Response) {
     skills: body.skills ?? [],
     experienceLevel: body.experienceLevel ?? "",
     availability: body.availability ?? "",
-    ...(body.roleId ? { roleId: body.roleId } : {}),
+    roleId: body.roleId,
+    ...(body.secondRoleId ? { secondRoleId: body.secondRoleId } : {}),
+    ...(body.thirdRoleId ? { thirdRoleId: body.thirdRoleId } : {}),
     cvUrl,
     portfolioUrl,
     motivationLetter: body.motivationLetter ?? "",

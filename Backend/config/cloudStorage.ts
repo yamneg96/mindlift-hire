@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
 
-export type UploadTarget = "cv" | "portfolio" | "ml-role-image";
+export type UploadTarget =
+  | "cv"
+  | "portfolio"
+  | "ml-role-image"
+  | "ml-job-image";
 
 let cloudinaryConfigured = false;
 
@@ -55,4 +59,38 @@ export async function uploadToCloudStorage(
   await fs.unlink(filePath).catch(() => undefined);
 
   return uploadResult.secure_url;
+}
+
+export async function uploadBufferToCloudStorage(options: {
+  file: Buffer;
+  fileName: string;
+  folder: string;
+  resourceType?: "image" | "raw" | "video" | "auto";
+}): Promise<string> {
+  ensureCloudinaryConfigured();
+
+  const normalizedFolder = options.folder.replace(/^\/+|\/+$/g, "");
+
+  return new Promise<string>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: normalizedFolder,
+        resource_type: options.resourceType ?? "auto",
+        use_filename: true,
+        unique_filename: true,
+        overwrite: false,
+        filename_override: options.fileName,
+      },
+      (error, result) => {
+        if (error || !result?.secure_url) {
+          reject(error ?? new Error("Cloud upload failed"));
+          return;
+        }
+
+        resolve(result.secure_url);
+      },
+    );
+
+    stream.end(options.file);
+  });
 }
