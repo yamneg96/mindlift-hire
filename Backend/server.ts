@@ -20,14 +20,31 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT ?? 5000);
 
-const allowedOrigins = (
-  process.env.CORS_ORIGIN ??
-  process.env.CLIENT_ORIGIN ??
-  "http://localhost:5173"
-)
-  .split(",")
-  .map((origin) => origin.trim())
+function normalizeOrigin(value: string): string {
+  return value
+    .trim()
+    .replace(/^['\"]|['\"]$/g, "")
+    .replace(/\/+$/, "");
+}
+
+const defaultAllowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://mindlift-hire.vercel.app",
+];
+
+const configuredAllowedOrigins = [
+  process.env.CORS_ORIGIN,
+  process.env.CLIENT_ORIGIN,
+]
+  .filter(Boolean)
+  .flatMap((value) => String(value).split(","))
+  .map(normalizeOrigin)
   .filter(Boolean);
+
+const allowedOrigins = new Set(
+  [...defaultAllowedOrigins, ...configuredAllowedOrigins].map(normalizeOrigin),
+);
 
 // Required for platforms like Vercel/NGINX so req.ip and rate limiting work
 // correctly when X-Forwarded-For is present.
@@ -43,7 +60,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow non-browser clients (no Origin header) and configured browser origins.
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
         callback(null, true);
         return;
       }
