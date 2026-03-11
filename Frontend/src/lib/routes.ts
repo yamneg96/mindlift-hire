@@ -33,3 +33,42 @@ export const routeLabels: Record<AppRoute, string> = {
   "applicant-list": "ApplicantListPage",
   "applicant-details": "ApplicantDetailsPage",
 }
+
+export const routePaths: Record<AppRoute, string> = {
+  landing: "/",
+  about: "/about",
+  "application-form": "/apply",
+  "minimal-application": "/quick-apply",
+  contact: "/contact",
+  privacy: "/privacy",
+  terms: "/terms",
+  "admin-login": "/admin/login",
+  "admin-verify-otp": "/admin/verify-otp",
+  "admin-dashboard": "/admin/dashboard",
+  "admin-settings": "/admin/settings",
+  "admin-email": "/admin/email",
+  "applicant-list": "/admin/applicants",
+  "applicant-details": "/admin/applicants/details",
+}
+
+const pathToRouteEntries = Object.entries(routePaths).map(([route, path]) => [
+  path,
+  route as AppRoute,
+])
+
+const knownPaths = new Set(pathToRouteEntries.map(([path]) => path))
+
+export function routeFromPath(pathname: string): AppRoute {
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/"
+  const matched = pathToRouteEntries.find(([path]) => path === normalizedPath)
+  return matched?.[1] ?? "landing"
+}
+
+export function pathFromRoute(route: AppRoute): string {
+  return routePaths[route] ?? "/"
+}
+
+export function isKnownPath(pathname: string): boolean {
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/"
+  return knownPaths.has(normalizedPath)
+}

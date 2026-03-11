@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useLocation, useNavigate } from "react-router-dom"
 
-import { type AppRoute, appRoutes } from "@/lib/routes"
+import {
+  type AppRoute,
+  isKnownPath,
+  pathFromRoute,
+  routeFromPath,
+} from "@/lib/routes"
 import { LandingPage } from "@/pages/landing-page"
 import { AboutPage } from "@/pages/about-page"
 import { ApplicationFormPage } from "@/pages/application-form-page"
@@ -93,38 +99,25 @@ const routeMeta: Record<AppRoute, { title: string; description: string }> = {
   },
 }
 
-function routeFromHash(hash: string): AppRoute {
-  const value = hash.replace("#", "") as AppRoute
-  return appRoutes.includes(value) ? value : defaultRoute
-}
-
 export function App() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const token = useAppStore((state) => state.token)
   const userRole = useAppStore((state) => state.user?.role)
-  const [route, setRoute] = useState<AppRoute>(() =>
-    routeFromHash(window.location.hash)
-  )
+  const route = routeFromPath(location.pathname)
 
   const isAdminAuthenticated = Boolean(token && userRole === "admin")
 
   const goTo = (target: AppRoute) => {
-    setRoute(target)
-    if (target === "landing") {
-      window.history.pushState({}, "", "/")
-      return
-    }
-
-    window.location.hash = target
+    navigate(pathFromRoute(target))
   }
 
   useEffect(() => {
-    const onHashChange = () => {
-      setRoute(routeFromHash(window.location.hash))
+    if (isKnownPath(location.pathname)) {
+      return
     }
-
-    window.addEventListener("hashchange", onHashChange)
-    return () => window.removeEventListener("hashchange", onHashChange)
-  }, [])
+    navigate(pathFromRoute(defaultRoute), { replace: true })
+  }, [location.pathname, navigate])
 
   useEffect(() => {
     const meta = routeMeta[route]
