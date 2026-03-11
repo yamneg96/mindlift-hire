@@ -61,7 +61,8 @@ export function MultiStepApplicationForm({
 
     if (
       cv.type !== "application/pdf" &&
-      cv.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      cv.type !==
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       setLocalError("CV must be a PDF or DOCX file.")
       return
@@ -184,7 +185,9 @@ export function MultiStepApplicationForm({
             {(applyMutation.error as Error).message}
           </p>
         ) : null}
-        {localError ? <p className="text-sm text-destructive">{localError}</p> : null}
+        {localError ? (
+          <p className="text-sm text-destructive">{localError}</p>
+        ) : null}
         {applyMutation.isSuccess ? (
           <p className="text-sm text-primary">
             Application submitted successfully.
