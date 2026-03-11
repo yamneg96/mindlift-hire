@@ -32,7 +32,7 @@ if (trustProxySetting) {
 app.use(helmet());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://mindlift-hire.vercel.app"],
+    origin: ["http://localhost:5173", "https://mindlift-hire.vercel.app", "https://mindlift-backend.vercel.com"],
     credentials: true,
   }),
 );
