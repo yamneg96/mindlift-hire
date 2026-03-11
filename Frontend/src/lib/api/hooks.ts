@@ -32,16 +32,90 @@ export function useCreateRoleMutation() {
       title: string
       description: string
       department: string
+      imageFile?: File | null
       requiredSkills: string[]
       status: "open" | "closed"
       maxApplicants: number
-    }) =>
-      apiRequest("/roles", roleSchema, {
+    }) => {
+      const formData = new FormData()
+      formData.append("title", payload.title)
+      formData.append("description", payload.description)
+      formData.append("department", payload.department)
+      formData.append("requiredSkills", payload.requiredSkills.join(","))
+      formData.append("status", payload.status)
+      formData.append("maxApplicants", String(payload.maxApplicants))
+      if (payload.imageFile) {
+        formData.append("image", payload.imageFile)
+      }
+
+      return apiRequest("/roles", roleSchema, {
         method: "POST",
-        body: payload,
-      }),
+        body: formData,
+        isFormData: true,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
+      queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+    },
+  })
+}
+
+export function useAdminRolesQuery(enabled = true) {
+  return useQuery({
+    queryKey: ["roles", "admin", "all"],
+    queryFn: () => apiRequest("/roles/admin/all", roleListSchema),
+    enabled,
+  })
+}
+
+export function useUpdateRoleMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: {
+      id: string
+      title?: string
+      description?: string
+      department?: string
+      imageFile?: File | null
+      requiredSkills?: string[]
+      status?: "open" | "closed"
+      maxApplicants?: number
+    }) => {
+      const formData = new FormData()
+      if (payload.title !== undefined) {
+        formData.append("title", payload.title)
+      }
+      if (payload.description !== undefined) {
+        formData.append("description", payload.description)
+      }
+      if (payload.department !== undefined) {
+        formData.append("department", payload.department)
+      }
+      if (payload.requiredSkills !== undefined) {
+        formData.append("requiredSkills", payload.requiredSkills.join(","))
+      }
+      if (payload.status !== undefined) {
+        formData.append("status", payload.status)
+      }
+      if (payload.maxApplicants !== undefined) {
+        formData.append("maxApplicants", String(payload.maxApplicants))
+      }
+      if (payload.imageFile) {
+        formData.append("image", payload.imageFile)
+      }
+
+      return apiRequest(`/roles/${payload.id}`, roleSchema, {
+        method: "PATCH",
+        body: formData,
+        isFormData: true,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
+      queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
     },
   })
@@ -111,10 +185,12 @@ export function useAdminVerifyOtpMutation() {
 export function useApplyMutation() {
   return useMutation({
     mutationFn: (payload: {
+      applicationType?: "role" | "job"
       roleId: string
       fullName: string
       email: string
-      motivationLetter: string
+      phone?: string
+      motivationLetter?: string
       linkedin?: string
       portfolioLink?: string
       skills?: string[]
@@ -125,10 +201,12 @@ export function useApplyMutation() {
       portfolioFile?: File | null
     }) => {
       const formData = new FormData()
+      formData.append("applicationType", payload.applicationType ?? "role")
       formData.append("roleId", payload.roleId)
       formData.append("fullName", payload.fullName)
       formData.append("email", payload.email)
-      formData.append("motivationLetter", payload.motivationLetter)
+      formData.append("phone", payload.phone ?? "")
+      formData.append("motivationLetter", payload.motivationLetter ?? "")
       formData.append("linkedin", payload.linkedin ?? "")
       formData.append("portfolio", payload.portfolioLink ?? "")
       formData.append("skills", (payload.skills ?? []).join(","))
@@ -234,7 +312,7 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
             : 45,
     status: statusMap[item.status],
     location: "Not provided",
-    phone: "Not provided",
+    phone: item.phone || "Not provided",
     linkedin: item.linkedin || "Not provided",
     experience: [
       item.experienceLevel ||

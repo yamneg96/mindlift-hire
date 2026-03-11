@@ -23,6 +23,7 @@ export function AdminEmailPage({
     target:
       | "admin-login"
       | "admin-dashboard"
+      | "admin-roles"
       | "admin-settings"
       | "admin-email"
       | "applicant-list"

@@ -10,11 +10,17 @@ const applicationSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    phone: { type: String, default: "" },
     linkedin: { type: String, default: "" },
     portfolio: { type: String, default: "" },
     skills: { type: [String], default: [] },
     experienceLevel: { type: String, default: "" },
     availability: { type: String, default: "" },
+    applicationType: {
+      type: String,
+      enum: ["role", "job"],
+      default: "role",
+    },
     roleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
     cvUrl: { type: String, required: true },
     portfolioUrl: { type: String, default: "" },
@@ -43,6 +49,7 @@ const applicationSchema = new Schema(
 
 applicationSchema.index({ roleId: 1, status: 1, appliedAt: -1 });
 applicationSchema.index({ applicantEmail: 1, roleId: 1 });
+applicationSchema.index({ applicationType: 1, status: 1, appliedAt: -1 });
 
 export type ApplicationDocument = InferSchemaType<typeof applicationSchema>;
 

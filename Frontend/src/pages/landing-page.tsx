@@ -1,11 +1,14 @@
+import { useMemo, useState } from "react"
 import { ArrowRight } from "lucide-react"
 
 import { EmptyState } from "@/components/empty-state"
 import { RoleCard } from "@/components/role-card"
 import { Button } from "@/components/ui/button"
 import { useRolesQuery } from "@/lib/api/hooks"
+import { ROLE_APPLICATIONS_ENABLED } from "@/lib/feature-flags"
 import { PublicLayout } from "@/layouts/public-layout"
 import type { RoleCardItem } from "@/lib/mock-data"
+import { useAppStore } from "@/store/app-store"
 
 type Navigate = (
   target:
@@ -21,6 +24,13 @@ type Navigate = (
 
 export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
   const { data: roles, isLoading } = useRolesQuery()
+  const setSelectedRoleId = useAppStore((state) => state.setSelectedRoleId)
+  const [showAllRoles, setShowAllRoles] = useState(false)
+
+  const handleApplyForRole = (roleId: string) => {
+    setSelectedRoleId(roleId)
+    onNavigate("application-form")
+  }
 
   const resolvedRoles: RoleCardItem[] =
     roles && roles.length > 0
@@ -32,9 +42,15 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
           description: role.description,
           openings: role.maxApplicants,
           image:
+            role.imageUrl?.trim() ||
             "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop",
         }))
       : []
+
+  const visibleRoles = useMemo(
+    () => (showAllRoles ? resolvedRoles : resolvedRoles.slice(0, 3)),
+    [resolvedRoles, showAllRoles]
+  )
 
   return (
     <PublicLayout onNavigate={onNavigate}>
@@ -58,6 +74,7 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Button
                 className="gap-1"
+                disabled={!ROLE_APPLICATIONS_ENABLED}
                 onClick={() => onNavigate("application-form")}
               >
                 View Open Roles
@@ -85,12 +102,26 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
               Help us make a lasting impact.
             </p>
           </div>
-          <button
-            className="text-sm font-semibold text-primary"
-            onClick={() => onNavigate("minimal-application")}
-          >
-            Quick Apply
-          </button>
+          <div className="flex items-center gap-4">
+            {resolvedRoles.length > 3 ? (
+              <button
+                className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+                onClick={() => setShowAllRoles((value) => !value)}
+              >
+                {showAllRoles ? "Show Less" : "Show More"}
+              </button>
+            ) : null}
+            <button
+              className="text-sm font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!ROLE_APPLICATIONS_ENABLED}
+              onClick={() => {
+                setSelectedRoleId(null)
+                onNavigate("application-form")
+              }}
+            >
+              Browse Role Applications
+            </button>
+          </div>
         </div>
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4">
@@ -110,8 +141,18 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
           />
         ) : (
           <div className="flex flex-col gap-5">
-            {resolvedRoles.map((role) => (
-              <RoleCard key={role.id} role={role} />
+            {visibleRoles.map((role) => (
+              <RoleCard
+                key={role.id}
+                role={role}
+                applyDisabled={!ROLE_APPLICATIONS_ENABLED}
+                onApply={(selectedRole) => {
+                  if (!ROLE_APPLICATIONS_ENABLED) {
+                    return
+                  }
+                  handleApplyForRole(selectedRole.id)
+                }}
+              />
             ))}
           </div>
         )}
@@ -120,17 +161,15 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
       <section className="border-t border-border bg-muted/30 py-12">
         <div className="mx-auto w-full max-w-6xl px-4 text-center md:px-6">
           <h2 className="text-3xl font-black tracking-tight">
-            Don't see a role that fits?
+            Future Job Board
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-            Submit a general application and our team will contact you when a
-            matching role opens.
+            Dedicated job applications are planned for a future release. Current
+            applications below are role-based submissions for active MindLift
+            roles.
           </p>
-          <Button
-            className="mt-5"
-            onClick={() => onNavigate("minimal-application")}
-          >
-            General Application
+          <Button className="mt-5" disabled>
+            Job Applications Coming Soon
           </Button>
         </div>
       </section>

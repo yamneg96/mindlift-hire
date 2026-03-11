@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
 
-export type UploadTarget = "cv" | "portfolio";
+export type UploadTarget = "cv" | "portfolio" | "role-images";
 
 let cloudinaryConfigured = false;
 

@@ -17,7 +17,13 @@ import { adminSidebarItems } from "@/lib/mock-data"
 import { useAppStore } from "@/store/app-store"
 import { cn } from "@/lib/utils"
 
-type AdminPage = "dashboard" | "applicants" | "details" | "email" | "settings"
+type AdminPage =
+  | "dashboard"
+  | "roles"
+  | "applicants"
+  | "details"
+  | "email"
+  | "settings"
 
 type AdminLayoutProps = PropsWithChildren<{
   current: AdminPage
@@ -25,6 +31,7 @@ type AdminLayoutProps = PropsWithChildren<{
     target:
       | "admin-login"
       | "admin-dashboard"
+      | "admin-roles"
       | "admin-settings"
       | "admin-email"
       | "applicant-list"
@@ -59,6 +66,7 @@ export function AdminLayout({
     target:
       | "admin-login"
       | "admin-dashboard"
+      | "admin-roles"
       | "admin-settings"
       | "admin-email"
       | "applicant-list"
@@ -82,6 +90,7 @@ export function AdminLayout({
           const Icon = itemIcons[item]
           const active =
             (item === "Dashboard" && current === "dashboard") ||
+            (item === "Roles" && current === "roles") ||
             (item === "Applicants" &&
               (current === "applicants" || current === "details")) ||
             (item === "Notifications" && current === "email") ||
@@ -97,6 +106,7 @@ export function AdminLayout({
               )}
               onClick={() => {
                 if (item === "Dashboard") navigateFromSidebar("admin-dashboard")
+                if (item === "Roles") navigateFromSidebar("admin-roles")
                 if (item === "Applicants") navigateFromSidebar("applicant-list")
                 if (item === "Notifications") navigateFromSidebar("admin-email")
                 if (item === "Settings") navigateFromSidebar("admin-settings")

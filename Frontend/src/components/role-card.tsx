@@ -11,7 +11,15 @@ import {
 import { Badge } from "@/components/ui/badge"
 import type { RoleCardItem } from "@/lib/mock-data"
 
-export function RoleCard({ role }: { role: RoleCardItem }) {
+export function RoleCard({
+  role,
+  onApply,
+  applyDisabled,
+}: {
+  role: RoleCardItem
+  onApply?: (role: RoleCardItem) => void
+  applyDisabled?: boolean
+}) {
   return (
     <Card className="overflow-hidden border border-border bg-card py-0 lg:flex-row">
       <div
@@ -41,7 +49,12 @@ export function RoleCard({ role }: { role: RoleCardItem }) {
             <Users className="size-4" />
             <span>{role.openings} openings</span>
           </div>
-          <Button className="gap-1 rounded-lg" size="sm">
+          <Button
+            className="gap-1 rounded-lg"
+            size="sm"
+            disabled={applyDisabled}
+            onClick={() => onApply?.(role)}
+          >
             Apply Now
             <ArrowRight className="size-4" />
           </Button>

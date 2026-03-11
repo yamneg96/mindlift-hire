@@ -34,7 +34,7 @@ export type Applicant = {
 export const adminSidebarItems = [
   "Dashboard",
   "Applicants",
-  // "Roles",
+  "Roles",
   "Notifications",
   "Settings",
 ] as const

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { ROLE_APPLICATIONS_ENABLED } from "@/lib/feature-flags"
 
 type PublicLayoutProps = PropsWithChildren<{
   onNavigate: (
@@ -52,12 +53,6 @@ export function PublicLayout({ children, onNavigate }: PublicLayoutProps) {
               onClick={() => onNavigate("application-form")}
             >
               Roles
-            </button>
-            <button
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => onNavigate("admin-login")}
-            >
-              Admin Login
             </button>
           </nav>
           <div className="flex items-center gap-2">
@@ -110,16 +105,8 @@ export function PublicLayout({ children, onNavigate }: PublicLayoutProps) {
                   </DialogClose>
                   <DialogClose asChild>
                     <Button
-                      className="justify-start"
-                      variant="ghost"
-                      onClick={() => onNavigate("admin-login")}
-                    >
-                      Admin Login
-                    </Button>
-                  </DialogClose>
-                  <DialogClose asChild>
-                    <Button
                       className="mt-2"
+                      disabled={!ROLE_APPLICATIONS_ENABLED}
                       onClick={() => onNavigate("application-form")}
                     >
                       Apply Now
@@ -131,6 +118,7 @@ export function PublicLayout({ children, onNavigate }: PublicLayoutProps) {
             </Dialog>
             <Button
               className="hidden gap-1 md:inline-flex"
+              disabled={!ROLE_APPLICATIONS_ENABLED}
               onClick={() => onNavigate("application-form")}
             >
               Apply Now

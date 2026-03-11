@@ -18,6 +18,7 @@ import { TermsOfServicePage } from "@/pages/terms-of-service-page"
 import { AdminLoginPage } from "@/pages/admin-login-page"
 import { AdminOtpPage } from "@/pages/admin-otp-page"
 import { AdminDashboardPage } from "@/pages/admin-dashboard-page"
+import { AdminRolesPage } from "@/pages/admin-roles-page"
 import { AdminSettingsPage } from "@/pages/admin-settings-page"
 import { AdminEmailPage } from "@/pages/admin-email-page"
 import { ApplicantListPage } from "@/pages/applicant-list-page"
@@ -76,6 +77,11 @@ const routeMeta: Record<AppRoute, { title: string; description: string }> = {
     title: "Admin Dashboard | MindLift Role Portal",
     description:
       "Monitor application metrics, activity, and candidate progress from the MindLift admin dashboard.",
+  },
+  "admin-roles": {
+    title: "Admin Roles | MindLift Role Portal",
+    description:
+      "Manage posted roles, including title, details, status, capacity, and preview image.",
   },
   "admin-settings": {
     title: "Admin Settings | MindLift Role Portal",
@@ -202,6 +208,11 @@ export function App() {
           return <AdminLoginPage onNavigate={goTo} />
         }
         return <AdminDashboardPage onNavigate={goTo} />
+      case "admin-roles":
+        if (!isAdminAuthenticated) {
+          return <AdminLoginPage onNavigate={goTo} />
+        }
+        return <AdminRolesPage onNavigate={goTo} />
       case "admin-settings":
         if (!isAdminAuthenticated) {
           return <AdminLoginPage onNavigate={goTo} />

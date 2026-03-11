@@ -20,7 +20,12 @@ function ensureUploadDirs() {
   const fallbackRoot = path.join(os.tmpdir(), "mindlift-role", "uploads");
 
   const createDirs = (root: string) => {
-    const dirs = [root, path.join(root, "cv"), path.join(root, "portfolio")];
+    const dirs = [
+      root,
+      path.join(root, "cv"),
+      path.join(root, "portfolio"),
+      path.join(root, "role-images"),
+    ];
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -34,6 +39,7 @@ function ensureUploadDirs() {
       uploadRoot: preferredRoot,
       cvDir: path.join(preferredRoot, "cv"),
       portfolioDir: path.join(preferredRoot, "portfolio"),
+      roleImagesDir: path.join(preferredRoot, "role-images"),
     };
   } catch {
     createDirs(fallbackRoot);
@@ -41,11 +47,12 @@ function ensureUploadDirs() {
       uploadRoot: fallbackRoot,
       cvDir: path.join(fallbackRoot, "cv"),
       portfolioDir: path.join(fallbackRoot, "portfolio"),
+      roleImagesDir: path.join(fallbackRoot, "role-images"),
     };
   }
 }
 
-const { cvDir, portfolioDir } = ensureUploadDirs();
+const { cvDir, portfolioDir, roleImagesDir } = ensureUploadDirs();
 
 const storage = multer.diskStorage({
   destination: (_req, file, cb) => {
@@ -83,6 +90,37 @@ function fileFilter(
 export const upload = multer({
   storage,
   fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const roleImageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, roleImagesDir);
+  },
+  filename: (_req, file, cb) => {
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    cb(null, `${Date.now()}-${safeName}`);
+  },
+});
+
+function roleImageFileFilter(
+  _req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback,
+) {
+  if (!file.mimetype.startsWith("image/")) {
+    cb(new Error("Only image files are allowed for role preview"));
+    return;
+  }
+
+  cb(null, true);
+}
+
+export const roleImageUpload = multer({
+  storage: roleImageStorage,
+  fileFilter: roleImageFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,
   },

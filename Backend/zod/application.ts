@@ -1,10 +1,12 @@
 import { z } from "zod";
 
 export const applySchema = z.object({
+  applicationType: z.enum(["role", "job"]).default("role"),
   roleId: z.string().min(1),
   fullName: z.string().min(2),
   email: z.string().email(),
-  motivationLetter: z.string().min(20),
+  phone: z.string().optional(),
+  motivationLetter: z.string().min(5).optional().or(z.literal("")),
   linkedin: z.string().optional(),
   portfolio: z.string().optional(),
   skills: z

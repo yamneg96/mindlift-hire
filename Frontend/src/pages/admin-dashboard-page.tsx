@@ -48,6 +48,7 @@ export function AdminDashboardPage({
     target:
       | "admin-login"
       | "admin-dashboard"
+      | "admin-roles"
       | "admin-settings"
       | "admin-email"
       | "applicant-list"
@@ -66,6 +67,7 @@ export function AdminDashboardPage({
   const [title, setTitle] = useState("")
   const [department, setDepartment] = useState("")
   const [description, setDescription] = useState("")
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [skillsInput, setSkillsInput] = useState("")
   const [maxApplicants, setMaxApplicants] = useState("100")
 
@@ -106,6 +108,7 @@ export function AdminDashboardPage({
         title: title.trim(),
         department: department.trim(),
         description: description.trim(),
+        imageFile,
         requiredSkills: skillsInput
           .split(",")
           .map((skill) => skill.trim())
@@ -117,6 +120,7 @@ export function AdminDashboardPage({
       setTitle("")
       setDepartment("")
       setDescription("")
+      setImageFile(null)
       setSkillsInput("")
       setMaxApplicants("100")
       setIsRoleDialogOpen(false)
@@ -175,6 +179,16 @@ export function AdminDashboardPage({
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Preview Image (Optional)</Label>
+              <Input
+                accept="image/*"
+                type="file"
+                onChange={(event) =>
+                  setImageFile(event.target.files?.[0] ?? null)
+                }
+              />
+            </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Required Skills (comma separated)</Label>
@@ -204,7 +218,10 @@ export function AdminDashboardPage({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsRoleDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button

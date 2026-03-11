@@ -12,6 +12,7 @@ export const roleSchema = z.object({
   title: z.string(),
   description: z.string(),
   department: z.string(),
+  imageUrl: z.string().optional().default(""),
   requiredSkills: z.array(z.string()).default([]),
   status: z.enum(["open", "closed"]),
   maxApplicants: z.number(),
@@ -80,8 +81,10 @@ export const populatedRoleSchema = z
 
 export const applicationItemSchema = z.object({
   _id: z.string(),
+  applicationType: z.enum(["role", "job"]).optional().default("role"),
   applicantName: z.string().optional().default("Unknown Applicant"),
   applicantEmail: z.string().email().optional().default("unknown@example.com"),
+  phone: z.string().optional().default(""),
   linkedin: z.string().optional().default(""),
   portfolio: z.string().optional().default(""),
   skills: z.array(z.string()).optional().default([]),

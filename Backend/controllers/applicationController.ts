@@ -9,6 +9,13 @@ import { sendError, sendSuccess } from "../utils/response.js";
 import { uploadToCloudStorage } from "../config/cloudStorage.js";
 import { sendApplicantNotificationEmail } from "../services/email/emailService.js";
 
+function isRoleApplicationEnabled() {
+  return (
+    String(process.env.ROLE_APPLICATIONS_ENABLED ?? "true").toLowerCase() ===
+    "true"
+  );
+}
+
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const base = process.env.UPLOAD_BASE_URL ?? "";
@@ -25,6 +32,14 @@ function buildPublicFileUrl(filePath: string) {
 }
 
 export async function applyForRole(req: Request, res: Response) {
+  if (!isRoleApplicationEnabled()) {
+    return sendError(
+      res,
+      "Role applications are currently disabled. Please check again later.",
+      503,
+    );
+  }
+
   const body = parseBody<ReturnType<typeof applySchema.parse>>(
     applySchema,
     req.body,
@@ -69,8 +84,10 @@ export async function applyForRole(req: Request, res: Response) {
   }
 
   const application = await ApplicationModel.create({
+    applicationType: body.applicationType ?? "role",
     applicantName: body.fullName,
     applicantEmail: body.email.toLowerCase(),
+    phone: body.phone ?? "",
     linkedin: body.linkedin ?? "",
     portfolio: body.portfolio ?? "",
     skills: body.skills ?? [],
@@ -79,7 +96,7 @@ export async function applyForRole(req: Request, res: Response) {
     roleId: body.roleId,
     cvUrl,
     portfolioUrl,
-    motivationLetter: body.motivationLetter,
+    motivationLetter: body.motivationLetter ?? "",
     additionalAnswers: {
       experienceLevel: body.experienceLevel,
       availability: body.availability,
