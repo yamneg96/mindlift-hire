@@ -872,12 +872,6 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 
-// Alias routes from the instruction's alternate route overview
-app.use("/roles", roleRoutes);
-app.use("/applications", applicationRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/auth", authRoutes);
-
 app.use(notFoundHandler);
 app.use(errorHandler);
 
