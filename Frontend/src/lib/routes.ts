@@ -61,7 +61,7 @@ const knownPaths = new Set(pathToRouteEntries.map(([path]) => path))
 export function routeFromPath(pathname: string): AppRoute {
   const normalizedPath = pathname.replace(/\/+$/, "") || "/"
   const matched = pathToRouteEntries.find(([path]) => path === normalizedPath)
-  return matched?.[1] ?? "landing"
+  return (matched?.[1] ?? "landing") as AppRoute
 }
 
 export function pathFromRoute(route: AppRoute): string {
