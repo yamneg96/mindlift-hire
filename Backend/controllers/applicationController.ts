@@ -58,8 +58,9 @@ export async function applyForRole(req: Request, res: Response) {
 
   let role: { _id: string; title?: string; status?: string } | null = null;
   if (body.roleId) {
-    const foundRole = await RoleModel.findById(body.roleId)
+    const [foundRole] = await RoleModel.find({ _id: body.roleId })
       .select("_id status title")
+      .limit(1)
       .lean();
     if (!foundRole || foundRole.status !== "open") {
       return sendError(res, "Role not available", 404);
