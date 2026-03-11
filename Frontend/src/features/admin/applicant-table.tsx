@@ -42,8 +42,14 @@ export function ApplicantTable({
 }) {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [roleFilter, setRoleFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"name" | "score">("score")
   const [page, setPage] = useState(1)
+
+  const availableRoles = useMemo(
+    () => Array.from(new Set(items.map((item) => item.role))).sort(),
+    [items]
+  )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -54,13 +60,14 @@ export function ApplicantTable({
         item.email.toLowerCase().includes(q) ||
         item.role.toLowerCase().includes(q)
       const matchStatus = statusFilter === "all" || item.status === statusFilter
-      return matchQuery && matchStatus
+      const matchRole = roleFilter === "all" || item.role === roleFilter
+      return matchQuery && matchStatus && matchRole
     })
 
     return [...base].sort((a, b) =>
       sortBy === "name" ? a.name.localeCompare(b.name) : b.score - a.score
     )
-  }, [items, query, statusFilter, sortBy])
+  }, [items, query, roleFilter, statusFilter, sortBy])
 
   const maxPage = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -97,6 +104,25 @@ export function ApplicantTable({
               <SelectItem value="reviewing">Reviewing</SelectItem>
               <SelectItem value="shortlisted">Shortlisted</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={roleFilter}
+            onValueChange={(value) => {
+              setPage(1)
+              setRoleFilter(value)
+            }}
+          >
+            <SelectTrigger className="w-full lg:w-52">
+              <SelectValue placeholder="Primary Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Primary Roles</SelectItem>
+              {availableRoles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button

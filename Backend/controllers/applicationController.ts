@@ -103,15 +103,6 @@ export async function applyForRole(req: Request, res: Response) {
         }
       : null;
 
-  const existing = await ApplicationModel.findOne({
-    applicantEmail: body.email.toLowerCase(),
-    roleId: body.roleId,
-  }).lean();
-
-  if (existing) {
-    return sendError(res, "Duplicate application for this role", 409);
-  }
-
   const cloudCredentialsConfigured =
     Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
     Boolean(process.env.CLOUDINARY_API_KEY) &&
