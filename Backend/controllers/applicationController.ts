@@ -19,10 +19,13 @@ function isRoleApplicationEnabled() {
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
+  const defaultCloudinaryBase =
+    (process.env.CLOUDINARY_UPLOAD_BASE_URL ?? "").trim() ||
+    "https://res.cloudinary.com/dmylzrvse/image/upload";
   const base =
     configuredBase && !configuredBase.includes("mindlift-backend.vercel")
       ? configuredBase
-      : "https://mindlift-hire.vercel.app";
+      : defaultCloudinaryBase;
   const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
     return `${normalizedBase}${normalized}`;
