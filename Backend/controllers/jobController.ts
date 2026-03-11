@@ -12,24 +12,25 @@ import { uploadBufferToCloudStorage } from "../config/cloudStorage.js";
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
-  const defaultCloudinaryBase =
-    (process.env.CLOUDINARY_UPLOAD_BASE_URL ?? "").trim() ||
-    "https://res.cloudinary.com/dmylzrvse/image/upload";
-  const base =
-    configuredBase && !configuredBase.includes("mindlift-backend.vercel")
-      ? configuredBase
-      : defaultCloudinaryBase;
+  // Local uploads should never be prefixed with Cloudinary base URLs.
+  const base = /res\.cloudinary\.com/i.test(configuredBase)
+    ? ""
+    : configuredBase;
   const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
-    return `${normalizedBase}${normalized}`;
+    return normalizedBase ? `${normalizedBase}${normalized}` : normalized;
   }
 
   const uploadsIndex = normalized.indexOf("uploads/");
   if (uploadsIndex >= 0) {
-    return `${normalizedBase}/${normalized.slice(uploadsIndex)}`;
+    return normalizedBase
+      ? `${normalizedBase}/${normalized.slice(uploadsIndex)}`
+      : `/${normalized.slice(uploadsIndex)}`;
   }
 
-  return `${normalizedBase}/${path.basename(normalized)}`;
+  return normalizedBase
+    ? `${normalizedBase}/${path.basename(normalized)}`
+    : `/${path.basename(normalized)}`;
 }
 
 async function resolveJobImageUrl(req: Request): Promise<string | undefined> {
@@ -39,7 +40,7 @@ async function resolveJobImageUrl(req: Request): Promise<string | undefined> {
   }
 
   const useCloud =
-    String(process.env.USE_CLOUD_STORAGE).toLowerCase() === "true";
+    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false";
 
   if (useCloud) {
     const fileBuffer = await fs.readFile(imageFile.path);

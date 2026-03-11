@@ -19,24 +19,25 @@ function isRoleApplicationEnabled() {
 function buildPublicFileUrl(filePath: string) {
   const normalized = filePath.replace(/\\/g, "/");
   const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
-  const defaultCloudinaryBase =
-    (process.env.CLOUDINARY_UPLOAD_BASE_URL ?? "").trim() ||
-    "https://res.cloudinary.com/dmylzrvse/image/upload";
-  const base =
-    configuredBase && !configuredBase.includes("mindlift-backend.vercel")
-      ? configuredBase
-      : defaultCloudinaryBase;
+  // Local uploads should never be prefixed with Cloudinary base URLs.
+  const base = /res\.cloudinary\.com/i.test(configuredBase)
+    ? ""
+    : configuredBase;
   const normalizedBase = base.replace(/\/$/, "");
   if (normalized.startsWith("/uploads")) {
-    return `${normalizedBase}${normalized}`;
+    return normalizedBase ? `${normalizedBase}${normalized}` : normalized;
   }
 
   const uploadsIndex = normalized.indexOf("uploads/");
   if (uploadsIndex >= 0) {
-    return `${normalizedBase}/${normalized.slice(uploadsIndex)}`;
+    return normalizedBase
+      ? `${normalizedBase}/${normalized.slice(uploadsIndex)}`
+      : `/${normalized.slice(uploadsIndex)}`;
   }
 
-  return `${normalizedBase}/${path.basename(normalized)}`;
+  return normalizedBase
+    ? `${normalizedBase}/${path.basename(normalized)}`
+    : `/${path.basename(normalized)}`;
 }
 
 export async function applyForRole(req: Request, res: Response) {
@@ -108,7 +109,7 @@ export async function applyForRole(req: Request, res: Response) {
   }
 
   const useCloud =
-    String(process.env.USE_CLOUD_STORAGE).toLowerCase() === "true";
+    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false";
   const cvUrl = useCloud
     ? await uploadToCloudStorage(cvFile.path, "cv")
     : buildPublicFileUrl(cvFile.path);
