@@ -7,6 +7,7 @@ import morgan from "morgan";
 
 import { connectDB } from "./config/db.js";
 import { roleRoutes } from "./routes/roleRoutes.js";
+import { jobRoutes } from "./routes/jobRoutes.js";
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import { adminRoutes } from "./routes/adminRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
@@ -875,6 +876,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/roles", roleRoutes);
+app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);

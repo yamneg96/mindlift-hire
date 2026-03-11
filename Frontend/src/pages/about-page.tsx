@@ -25,28 +25,14 @@ type Navigate = (
 
 const leaders = [
   {
-    name: "Dr. Sarah Jenkins",
+    name: "Dr. Eyosiyas",
     role: "Executive Director",
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop",
+    image: "/eyosiyas.png",
   },
   {
-    name: "Michael Chen",
+    name: "Dr. Eden",
     role: "Clinical Lead",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    name: "Elena Rodriguez",
-    role: "Operations Director",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    name: "David Park",
-    role: "Community Engagement",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800&auto=format&fit=crop",
+    image: "/eden.png",
   },
 ]
 

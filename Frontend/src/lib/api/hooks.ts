@@ -10,6 +10,7 @@ import {
   adminStatsSchema,
   applicationItemSchema,
   googleAuthResponseSchema,
+  jobSchema,
   roleSchema,
   type ApplicationItemApi,
 } from "@/lib/api/schemas"
@@ -58,6 +59,42 @@ export function useCreateRoleMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
       queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+    },
+  })
+}
+
+export function useCreateJobMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: {
+      title: string
+      description: string
+      department: string
+      imageFile?: File | null
+      requiredSkills: string[]
+      status: "open" | "closed"
+      maxApplicants: number
+    }) => {
+      const formData = new FormData()
+      formData.append("title", payload.title)
+      formData.append("description", payload.description)
+      formData.append("department", payload.department)
+      formData.append("requiredSkills", payload.requiredSkills.join(","))
+      formData.append("status", payload.status)
+      formData.append("maxApplicants", String(payload.maxApplicants))
+      if (payload.imageFile) {
+        formData.append("image", payload.imageFile)
+      }
+
+      return apiRequest("/jobs", jobSchema, {
+        method: "POST",
+        body: formData,
+        isFormData: true,
+      })
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
     },
   })
@@ -202,7 +239,7 @@ export function useApplyMutation() {
   return useMutation({
     mutationFn: (payload: {
       applicationType?: "role" | "job"
-      roleId: string
+      roleId?: string
       fullName: string
       email: string
       phone?: string
@@ -218,7 +255,9 @@ export function useApplyMutation() {
     }) => {
       const formData = new FormData()
       formData.append("applicationType", payload.applicationType ?? "role")
-      formData.append("roleId", payload.roleId)
+      if (payload.roleId) {
+        formData.append("roleId", payload.roleId)
+      }
       formData.append("fullName", payload.fullName)
       formData.append("email", payload.email)
       formData.append("phone", payload.phone ?? "")
@@ -290,8 +329,9 @@ export function useAdminUpdateApplicationMutation() {
 export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
   const rawRole = item.roleId
 
-  const roleObj =
-    typeof rawRole === "string"
+  const roleObj = !rawRole
+    ? { _id: "unknown", title: "General Application" }
+    : typeof rawRole === "string"
       ? { _id: rawRole, title: "Unknown Role" }
       : rawRole
 

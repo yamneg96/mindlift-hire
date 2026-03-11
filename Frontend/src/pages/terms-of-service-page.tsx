@@ -61,7 +61,7 @@ export function TermsOfServicePage({ onNavigate }: { onNavigate: Navigate }) {
                 Reach out to our support team for clarifications regarding
                 eligibility, data, or moderation.
               </p>
-              <Button className="gap-2">
+              <Button onClick={() => onNavigate("contact")} className="gap-2">
                 <Mail className="size-4" />
                 Contact Support
               </Button>

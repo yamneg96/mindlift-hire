@@ -166,6 +166,11 @@ export async function getAdminStats(_req: Request, res: Response) {
     ApplicationModel.countDocuments({ status: "approved" }),
     ApplicationModel.aggregate([
       {
+        $match: {
+          roleId: { $exists: true, $ne: null },
+        },
+      },
+      {
         $group: {
           _id: "$roleId",
           count: { $sum: 1 },

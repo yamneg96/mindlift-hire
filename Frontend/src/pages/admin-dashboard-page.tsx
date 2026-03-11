@@ -35,7 +35,7 @@ import {
   mapApplicationToApplicant,
   useAdminApplicationsQuery,
   useAdminStatsQuery,
-  useCreateRoleMutation,
+  useCreateJobMutation,
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
 import { activityFeed } from "@/lib/mock-data"
@@ -61,7 +61,7 @@ export function AdminDashboardPage({
   )
   const statsQuery = useAdminStatsQuery(true)
   const recentQuery = useAdminApplicationsQuery({ page: 1, limit: 4 })
-  const createRoleMutation = useCreateRoleMutation()
+  const createJobMutation = useCreateJobMutation()
 
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
   const [title, setTitle] = useState("")
@@ -104,7 +104,7 @@ export function AdminDashboardPage({
     }
 
     try {
-      await createRoleMutation.mutateAsync({
+      await createJobMutation.mutateAsync({
         title: title.trim(),
         department: department.trim(),
         description: description.trim(),
@@ -149,13 +149,13 @@ export function AdminDashboardPage({
           <DialogHeader>
             <DialogTitle>Create New Posting</DialogTitle>
             <DialogDescription>
-              Publish a role so it appears in the landing and application pages.
+              Publish a job posting for the job application pipeline.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Role Title</Label>
+              <Label>Job Title</Label>
               <Input
                 placeholder="Community Program Manager"
                 value={title}
@@ -210,9 +210,9 @@ export function AdminDashboardPage({
                 />
               </div>
             </div>
-            {createRoleMutation.isError ? (
+            {createJobMutation.isError ? (
               <p className="text-sm text-destructive">
-                {(createRoleMutation.error as Error).message}
+                {(createJobMutation.error as Error).message}
               </p>
             ) : null}
           </div>
@@ -225,10 +225,10 @@ export function AdminDashboardPage({
               Cancel
             </Button>
             <Button
-              disabled={createRoleMutation.isPending}
+              disabled={createJobMutation.isPending}
               onClick={submitNewPosting}
             >
-              {createRoleMutation.isPending ? "Publishing..." : "Publish Role"}
+              {createJobMutation.isPending ? "Publishing..." : "Publish Job"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -50,12 +50,12 @@ export function MultiStepApplicationForm({
   }, [onRoleChange, roleId])
 
   const canSubmit = Boolean(
-    ROLE_APPLICATIONS_ENABLED && fullName && email && roleId && cv
+    ROLE_APPLICATIONS_ENABLED && fullName && email && cv
   )
 
   const submit = async () => {
     if (!canSubmit || !cv) {
-      setLocalError("Please complete full name, email, role selection, and CV.")
+      setLocalError("Please complete full name, email, and CV.")
       return
     }
 
@@ -129,7 +129,7 @@ export function MultiStepApplicationForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Role Selection</Label>
+          <Label>Role Selection (Optional)</Label>
           {rolesQuery.isLoading ? (
             <div className="h-10 animate-pulse rounded-lg border border-border bg-muted/40" />
           ) : (rolesQuery.data ?? []).length === 0 ? (

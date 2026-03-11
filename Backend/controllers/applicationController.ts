@@ -56,18 +56,29 @@ export async function applyForRole(req: Request, res: Response) {
     return sendError(res, "CV file is required", 400);
   }
 
-  const role = await RoleModel.findById(body.roleId).select("status");
-  if (!role || role.status !== "open") {
-    return sendError(res, "Role not available", 404);
-  }
+  let role: { _id: string; title?: string; status?: string } | null = null;
+  if (body.roleId) {
+    const foundRole = await RoleModel.findById(body.roleId)
+      .select("_id status title")
+      .lean();
+    if (!foundRole || foundRole.status !== "open") {
+      return sendError(res, "Role not available", 404);
+    }
 
-  const existing = await ApplicationModel.findOne({
-    applicantEmail: body.email.toLowerCase(),
-    roleId: body.roleId,
-  }).lean();
+    role = {
+      _id: String(foundRole._id),
+      status: foundRole.status,
+      title: foundRole.title,
+    };
 
-  if (existing) {
-    return sendError(res, "Duplicate application for this role", 409);
+    const existing = await ApplicationModel.findOne({
+      applicantEmail: body.email.toLowerCase(),
+      roleId: body.roleId,
+    }).lean();
+
+    if (existing) {
+      return sendError(res, "Duplicate application for this role", 409);
+    }
   }
 
   const useCloud =
@@ -93,7 +104,7 @@ export async function applyForRole(req: Request, res: Response) {
     skills: body.skills ?? [],
     experienceLevel: body.experienceLevel ?? "",
     availability: body.availability ?? "",
-    roleId: body.roleId,
+    ...(body.roleId ? { roleId: body.roleId } : {}),
     cvUrl,
     portfolioUrl,
     motivationLetter: body.motivationLetter ?? "",
@@ -109,8 +120,7 @@ export async function applyForRole(req: Request, res: Response) {
   // eslint-disable-next-line no-console
   console.log(`[application] submitted: ${application._id}`);
 
-  const roleTitle =
-    (role as { title?: string }).title ?? "the selected position";
+  const roleTitle = role?.title ?? "the selected position";
 
   await sendApplicantNotificationEmail({
     to: body.email.toLowerCase(),

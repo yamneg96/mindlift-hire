@@ -124,7 +124,9 @@ export function PrivacyPolicyPage({ onNavigate }: { onNavigate: Navigate }) {
                 Our privacy team can clarify data handling, retention, and
                 request workflows.
               </p>
-              <Button>Contact Privacy Team</Button>
+              <Button onClick={() => onNavigate("contact")}>
+                Contact Privacy Team
+              </Button>
             </div>
           </div>
         </div>

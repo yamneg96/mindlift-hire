@@ -19,6 +19,8 @@ export const roleSchema = z.object({
   createdAt: z.string().optional(),
 })
 
+export const jobSchema = roleSchema
+
 export const authUserSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -93,7 +95,7 @@ export const applicationItemSchema = z.object({
   experienceLevel: z.string().optional().default(""),
   availability: z.string().optional().default(""),
   userId: z.union([z.string(), populatedUserSchema]).optional(),
-  roleId: z.union([z.string(), populatedRoleSchema]),
+  roleId: z.union([z.string(), populatedRoleSchema]).optional(),
   cvUrl: z.string(),
   portfolioUrl: z.string().optional().default(""),
   motivationLetter: z.string(),
@@ -121,5 +123,6 @@ export const adminApplicationsSchema = z.object({
 })
 
 export type RoleApi = z.infer<typeof roleSchema>
+export type JobApi = z.infer<typeof jobSchema>
 export type AdminStatsApi = z.infer<typeof adminStatsSchema>
 export type ApplicationItemApi = z.infer<typeof applicationItemSchema>

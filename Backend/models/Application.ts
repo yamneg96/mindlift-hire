@@ -21,10 +21,10 @@ const applicationSchema = new Schema(
       enum: ["role", "job"],
       default: "role",
     },
-    roleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
+    roleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
     cvUrl: { type: String, required: true },
     portfolioUrl: { type: String, default: "" },
-    motivationLetter: { type: String, required: true },
+    motivationLetter: { type: String, default: "" },
     additionalAnswers: {
       experienceLevel: { type: String, default: "" },
       availability: { type: String, default: "" },
