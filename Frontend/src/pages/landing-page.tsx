@@ -92,7 +92,7 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 pb-12 md:px-6">
+      <section className="mx-auto flex w-full max-w-6xl flex-col justify-center px-4 pb-12 md:px-6">
         <div className="mb-5 flex items-end justify-between">
           <div>
             <h2 className="text-3xl font-extrabold tracking-tight">
@@ -103,14 +103,6 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            {resolvedRoles.length > 3 ? (
-              <button
-                className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-                onClick={() => setShowAllRoles((value) => !value)}
-              >
-                {showAllRoles ? "Show Less" : "Show More"}
-              </button>
-            ) : null}
             <button
               className="text-sm font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!ROLE_APPLICATIONS_ENABLED}
@@ -156,6 +148,14 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
             ))}
           </div>
         )}
+        {resolvedRoles.length > 3 ? (
+          <button
+            className="m-4 cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground"
+            onClick={() => setShowAllRoles((value) => !value)}
+          >
+            {showAllRoles ? "Show Less" : "Show More"}
+          </button>
+        ) : null}
       </section>
 
       <section className="border-t border-border bg-muted/30 py-12">
