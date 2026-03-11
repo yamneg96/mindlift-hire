@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApplyMutation, useRolesQuery } from "@/lib/api/hooks"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 type Navigate = (
   target:
@@ -32,6 +33,7 @@ export function MinimalApplicationPage({
 }: {
   onNavigate: Navigate
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const rolesQuery = useRolesQuery()
   const applyMutation = useApplyMutation()
 
@@ -50,26 +52,42 @@ export function MinimalApplicationPage({
 
   const submit = async () => {
     if (!fullName || !email || !roleId || !motivationLetter || !cv) {
+      showError({
+        title: "Missing Required Fields",
+        description:
+          "Full name, email, role, motivation letter, and CV are required.",
+      })
       return
     }
 
-    await applyMutation.mutateAsync({
-      roleId,
-      fullName,
-      email,
-      linkedin,
-      portfolioLink,
-      skills: skills
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-      motivationLetter,
-      experienceLevel,
-      availability,
-      expectedContribution,
-      cv,
-      portfolioFile,
-    })
+    try {
+      await applyMutation.mutateAsync({
+        roleId,
+        fullName,
+        email,
+        linkedin,
+        portfolioLink,
+        skills: skills
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        motivationLetter,
+        experienceLevel,
+        availability,
+        expectedContribution,
+        cv,
+        portfolioFile,
+      })
+      showSuccess({
+        title: "Application Submitted",
+        description: "Your application has been submitted successfully.",
+      })
+    } catch (error) {
+      showError({
+        title: "Submission Failed",
+        description: (error as Error).message,
+      })
+    }
   }
 
   return (
@@ -213,16 +231,6 @@ export function MinimalApplicationPage({
                 }
               />
             </div>
-            {applyMutation.isError ? (
-              <p className="text-sm text-destructive">
-                {(applyMutation.error as Error).message}
-              </p>
-            ) : null}
-            {applyMutation.isSuccess ? (
-              <p className="text-sm text-primary">
-                Application submitted successfully.
-              </p>
-            ) : null}
             <Button
               className="w-full"
               disabled={applyMutation.isPending}

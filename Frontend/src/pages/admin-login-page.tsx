@@ -12,6 +12,7 @@ import {
   useGoogleAuthMutation,
 } from "@/lib/api/hooks"
 import { useAppStore } from "@/store/app-store"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 export function AdminLoginPage({
   onNavigate,
@@ -20,6 +21,7 @@ export function AdminLoginPage({
     target: "admin-verify-otp" | "admin-dashboard" | "landing"
   ) => void
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const [email, setEmail] = useState("admin@mindlift.com")
   const [googleError, setGoogleError] = useState("")
   const setAdminOtpEmail = useAppStore((state) => state.setAdminOtpEmail)
@@ -34,15 +36,26 @@ export function AdminLoginPage({
     try {
       await loginOtpMutation.mutateAsync({ email })
       setAdminOtpEmail(email)
+      showSuccess({
+        title: "OTP Sent",
+        description: "Check your inbox for the verification code.",
+      })
       onNavigate("admin-verify-otp")
-    } catch {
-      // no-op; message shown below
+    } catch (error) {
+      showError({
+        title: "OTP Login Failed",
+        description: (error as Error).message,
+      })
     }
   }
 
   const loginWithGoogle = async (response: CredentialResponse) => {
     if (!response.credential) {
       setGoogleError("Google credential missing. Please try again.")
+      showError({
+        title: "Google Sign-In Failed",
+        description: "Google credential missing. Please try again.",
+      })
       return
     }
 
@@ -52,6 +65,10 @@ export function AdminLoginPage({
       onNavigate("admin-dashboard")
     } catch (error) {
       setGoogleError((error as Error).message)
+      showError({
+        title: "Google Sign-In Failed",
+        description: (error as Error).message,
+      })
     }
   }
 
@@ -133,16 +150,6 @@ export function AdminLoginPage({
                     ? "Sending OTP..."
                     : "Send OTP (Fallback)"}
                 </Button>
-                {loginOtpMutation.isError ? (
-                  <p className="text-sm text-destructive">
-                    {(loginOtpMutation.error as Error).message}
-                  </p>
-                ) : null}
-                {loginOtpMutation.isSuccess ? (
-                  <p className="text-sm text-primary">
-                    OTP sent. Continue to verification.
-                  </p>
-                ) : null}
               </>
             ) : null}
             <Button

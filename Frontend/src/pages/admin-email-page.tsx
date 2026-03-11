@@ -13,6 +13,7 @@ import {
   useAdminSendEmailMutation,
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 const emailSchema = z.string().email()
 
@@ -31,6 +32,7 @@ export function AdminEmailPage({
       | "landing"
   ) => void
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const applicationsQuery = useAdminApplicationsQuery({ page: 1, limit: 100 })
   const sendEmailMutation = useAdminSendEmailMutation()
 
@@ -78,10 +80,19 @@ export function AdminEmailPage({
 
   const send = async () => {
     if (allRecipients.length === 0 || message.trim().length < 10) {
+      showError({
+        title: "Cannot Send Email",
+        description:
+          "Select at least one recipient and write a message with at least 10 characters.",
+      })
       return
     }
 
     if (manualRecipients.invalid.length > 0) {
+      showError({
+        title: "Invalid Recipient Emails",
+        description: `Fix invalid emails: ${manualRecipients.invalid.join(", ")}`,
+      })
       return
     }
 
@@ -91,8 +102,15 @@ export function AdminEmailPage({
         subject,
         body: message,
       })
+      showSuccess({
+        title: "Email Sent",
+        description: `Message sent to ${allRecipients.length} recipient(s).`,
+      })
     } catch {
-      // no-op; message is displayed in the UI
+      showError({
+        title: "Email Send Failed",
+        description: (sendEmailMutation.error as Error)?.message ?? "Request failed.",
+      })
     }
   }
 
@@ -211,14 +229,6 @@ export function AdminEmailPage({
               <Send className="size-4" />
               {sendEmailMutation.isPending ? "Sending..." : "Send Email"}
             </Button>
-            {sendEmailMutation.isSuccess ? (
-              <p className="text-sm text-primary">Email sent successfully.</p>
-            ) : null}
-            {sendEmailMutation.isError ? (
-              <p className="text-sm text-destructive">
-                {(sendEmailMutation.error as Error).message}
-              </p>
-            ) : null}
           </CardContent>
         </Card>
       </div>

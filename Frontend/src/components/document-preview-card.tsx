@@ -2,6 +2,23 @@ import { Eye, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { API_BASE } from "@/lib/api/client"
+
+function resolveDocumentUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) {
+    return url
+  }
+
+  const normalized = url.startsWith("/") ? url : `/${url}`
+  const normalizedApiBase = API_BASE.replace(/\/+$/, "")
+
+  if (/^https?:\/\//i.test(normalizedApiBase)) {
+    const backendOrigin = normalizedApiBase.replace(/\/api$/i, "")
+    return `${backendOrigin}${normalized}`
+  }
+
+  return `${window.location.origin}${normalized}`
+}
 
 export function DocumentPreviewCard({
   name,
@@ -37,7 +54,8 @@ export function DocumentPreviewCard({
               return
             }
 
-            window.open(url, "_blank", "noopener,noreferrer")
+            const resolvedUrl = resolveDocumentUrl(url)
+            window.open(resolvedUrl, "_blank", "noopener,noreferrer")
           }}
         >
           <Eye className="size-4" />

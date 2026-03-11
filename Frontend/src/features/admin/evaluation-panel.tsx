@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminUpdateApplicationMutation } from "@/lib/api/hooks"
 import type { Applicant } from "@/lib/mock-data"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 const categories: Array<keyof Applicant["evaluation"]> = [
   "Experience",
@@ -51,6 +52,7 @@ export function EvaluationPanel({
   applicationId: string
   initialStatus: "pending" | "approved" | "rejected" | "shortlisted"
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const [scores, setScores] = useState(applicant.evaluation)
   const [notes, setNotes] = useState(applicant.notes)
   const [currentStatus, setCurrentStatus] = useState(initialStatus)
@@ -79,8 +81,15 @@ export function EvaluationPanel({
       })
       setCurrentStatus(status)
       setNotes(mergedNotes)
-    } catch {
-      // no-op; error shown below
+      showSuccess({
+        title: "Evaluation Saved",
+        description: `Application status updated to ${status}.`,
+      })
+    } catch (error) {
+      showError({
+        title: "Save Failed",
+        description: (error as Error).message,
+      })
     }
   }
 
@@ -158,14 +167,6 @@ export function EvaluationPanel({
         >
           {updateMutation.isPending ? "Saving..." : "Save Evaluation"}
         </Button>
-        {updateMutation.isSuccess ? (
-          <p className="text-sm text-primary">Evaluation saved.</p>
-        ) : null}
-        {updateMutation.isError ? (
-          <p className="text-sm text-destructive">
-            {(updateMutation.error as Error).message}
-          </p>
-        ) : null}
       </CardContent>
     </Card>
   )

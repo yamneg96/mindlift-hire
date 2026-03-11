@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
 import { useAppStore } from "@/store/app-store"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 export function ApplicantListPage({
   onNavigate,
@@ -27,6 +28,7 @@ export function ApplicantListPage({
       | "landing"
   ) => void
 }) {
+  const { confirmDelete, showError, showSuccess } = useFeedbackModal()
   const setSelectedApplicationId = useAppStore(
     (state) => state.setSelectedApplicationId
   )
@@ -92,22 +94,32 @@ export function ApplicantListPage({
             onNavigate("applicant-details")
           }}
           onDelete={(item) => {
-            const confirmed = window.confirm(
-              `Delete applicant \"${item.name}\"? This cannot be undone.`
-            )
-            if (!confirmed) {
-              return
-            }
+            void (async () => {
+              const confirmed = await confirmDelete({
+                title: "Delete Applicant",
+                description: `Delete applicant "${item.name}"? This cannot be undone.`,
+                confirmLabel: "Delete Applicant",
+              })
+              if (!confirmed) {
+                return
+              }
 
-            void deleteApplicationMutation.mutateAsync({ id: item.id })
+              try {
+                await deleteApplicationMutation.mutateAsync({ id: item.id })
+                showSuccess({
+                  title: "Applicant Deleted",
+                  description: "The applicant has been removed.",
+                })
+              } catch (error) {
+                showError({
+                  title: "Delete Failed",
+                  description: (error as Error).message,
+                })
+              }
+            })()
           }}
         />
       )}
-      {deleteApplicationMutation.isError ? (
-        <p className="mt-3 text-sm text-destructive">
-          {(deleteApplicationMutation.error as Error).message}
-        </p>
-      ) : null}
     </AdminLayout>
   )
 }

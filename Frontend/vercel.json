@@ -5,6 +5,10 @@
       "destination": "https://mindlift-backend.vercel.app/api/$1"
     },
     {
+      "source": "/uploads/(.*)",
+      "destination": "https://mindlift-backend.vercel.app/uploads/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

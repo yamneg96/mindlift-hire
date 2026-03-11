@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useApplyMutation, useRolesQuery } from "@/lib/api/hooks"
 import { ROLE_APPLICATIONS_ENABLED } from "@/lib/feature-flags"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 export function MultiStepApplicationForm({
   initialRoleId,
@@ -22,6 +23,7 @@ export function MultiStepApplicationForm({
   initialRoleId?: string
   onRoleChange?: (roleId: string) => void
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const [roleId, setRoleId] = useState("")
   const [secondRoleId, setSecondRoleId] = useState("")
   const [thirdRoleId, setThirdRoleId] = useState("")
@@ -30,7 +32,6 @@ export function MultiStepApplicationForm({
   const [phone, setPhone] = useState("")
   const [motivationLetter, setMotivationLetter] = useState("")
   const [cv, setCv] = useState<File | null>(null)
-  const [localError, setLocalError] = useState("")
 
   const rolesQuery = useRolesQuery()
   const applyMutation = useApplyMutation()
@@ -82,9 +83,11 @@ export function MultiStepApplicationForm({
 
   const submit = async () => {
     if (!canSubmit || !cv) {
-      setLocalError(
-        "Please complete first role choice, full name, email, and CV."
-      )
+      showError({
+        title: "Missing Required Fields",
+        description:
+          "Please complete first role choice, full name, email, and CV.",
+      })
       return
     }
 
@@ -93,23 +96,35 @@ export function MultiStepApplicationForm({
       cv.type !==
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      setLocalError("CV must be a PDF or DOCX file.")
+      showError({
+        title: "Invalid CV Format",
+        description: "CV must be a PDF or DOCX file.",
+      })
       return
     }
 
-    setLocalError("")
-
-    await applyMutation.mutateAsync({
-      applicationType: "role",
-      roleId,
-      secondRoleId: secondRoleId || undefined,
-      thirdRoleId: thirdRoleId || undefined,
-      fullName,
-      email,
-      phone,
-      motivationLetter,
-      cv,
-    })
+    try {
+      await applyMutation.mutateAsync({
+        applicationType: "role",
+        roleId,
+        secondRoleId: secondRoleId || undefined,
+        thirdRoleId: thirdRoleId || undefined,
+        fullName,
+        email,
+        phone,
+        motivationLetter,
+        cv,
+      })
+      showSuccess({
+        title: "Application Submitted",
+        description: "Your role application has been submitted successfully.",
+      })
+    } catch (error) {
+      showError({
+        title: "Submission Failed",
+        description: (error as Error).message,
+      })
+    }
   }
 
   return (
@@ -262,20 +277,6 @@ export function MultiStepApplicationForm({
             onChange={(event) => setMotivationLetter(event.target.value)}
           />
         </div>
-
-        {applyMutation.isError ? (
-          <p className="text-sm text-destructive">
-            {(applyMutation.error as Error).message}
-          </p>
-        ) : null}
-        {localError ? (
-          <p className="text-sm text-destructive">{localError}</p>
-        ) : null}
-        {applyMutation.isSuccess ? (
-          <p className="text-sm text-primary">
-            Application submitted successfully.
-          </p>
-        ) : null}
 
         <Button
           className="w-full"

@@ -8,6 +8,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google"
 import "./index.css"
 import App from "./App.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
+import { FeedbackModalProvider } from "@/components/feedback-modal-provider.tsx"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +27,9 @@ const appTree = (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <App />
+        <FeedbackModalProvider>
+          <App />
+        </FeedbackModalProvider>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

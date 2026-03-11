@@ -38,6 +38,7 @@ import {
 } from "@/lib/api/hooks"
 import type { RoleApi } from "@/lib/api/schemas"
 import { AdminLayout } from "@/layouts/admin-layout"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 type AdminNavigate = (
   target:
@@ -79,6 +80,7 @@ function parseSkills(input: string): string[] {
 }
 
 export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
+  const { showSuccess, showError, confirmDelete } = useFeedbackModal()
   const rolesQuery = useAdminRolesQuery(true)
   const createRoleMutation = useCreateRoleMutation()
   const createRolesBulkMutation = useCreateRolesBulkMutation()
@@ -111,18 +113,29 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
       return
     }
 
-    await createRoleMutation.mutateAsync({
-      title: createForm.title.trim(),
-      department: createForm.department.trim(),
-      description: createForm.description.trim(),
-      imageFile: createForm.imageFile,
-      requiredSkills: parseSkills(createForm.requiredSkills),
-      maxApplicants: Math.round(maxApplicants),
-      status: createForm.status,
-    })
+    try {
+      await createRoleMutation.mutateAsync({
+        title: createForm.title.trim(),
+        department: createForm.department.trim(),
+        description: createForm.description.trim(),
+        imageFile: createForm.imageFile,
+        requiredSkills: parseSkills(createForm.requiredSkills),
+        maxApplicants: Math.round(maxApplicants),
+        status: createForm.status,
+      })
 
-    setCreateForm(emptyRoleForm)
-    setIsCreateOpen(false)
+      setCreateForm(emptyRoleForm)
+      setIsCreateOpen(false)
+      showSuccess({
+        title: "Role Published",
+        description: "The new role has been created successfully.",
+      })
+    } catch (error) {
+      showError({
+        title: "Role Creation Failed",
+        description: (error as Error).message,
+      })
+    }
   }
 
   const startEdit = (role: RoleApi) => {
@@ -154,31 +167,55 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
       return
     }
 
-    await updateRoleMutation.mutateAsync({
-      id: editingRole._id,
-      title: editForm.title.trim(),
-      department: editForm.department.trim(),
-      description: editForm.description.trim(),
-      imageFile: editForm.imageFile,
-      requiredSkills: parseSkills(editForm.requiredSkills),
-      maxApplicants: Math.round(maxApplicants),
-      status: editForm.status,
-    })
+    try {
+      await updateRoleMutation.mutateAsync({
+        id: editingRole._id,
+        title: editForm.title.trim(),
+        department: editForm.department.trim(),
+        description: editForm.description.trim(),
+        imageFile: editForm.imageFile,
+        requiredSkills: parseSkills(editForm.requiredSkills),
+        maxApplicants: Math.round(maxApplicants),
+        status: editForm.status,
+      })
 
-    setEditingRole(null)
+      setEditingRole(null)
+      showSuccess({
+        title: "Role Updated",
+        description: "Role details have been saved.",
+      })
+    } catch (error) {
+      showError({
+        title: "Update Failed",
+        description: (error as Error).message,
+      })
+    }
   }
 
   const removeRole = async (role: RoleApi) => {
-    const confirmed = window.confirm(
-      `Delete role \"${role.title}\"? This action cannot be undone.`
-    )
+    const confirmed = await confirmDelete({
+      title: "Delete Role",
+      description: `Delete role "${role.title}"? This action cannot be undone.`,
+      confirmLabel: "Delete Role",
+    })
     if (!confirmed) {
       return
     }
 
-    await deleteRoleMutation.mutateAsync({ id: role._id })
-    if (editingRole?._id === role._id) {
-      setEditingRole(null)
+    try {
+      await deleteRoleMutation.mutateAsync({ id: role._id })
+      if (editingRole?._id === role._id) {
+        setEditingRole(null)
+      }
+      showSuccess({
+        title: "Role Deleted",
+        description: "Role and related applicant records were removed.",
+      })
+    } catch (error) {
+      showError({
+        title: "Delete Failed",
+        description: (error as Error).message,
+      })
     }
   }
 
@@ -212,8 +249,17 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
       )
       setBulkJsonInput("")
       setIsBulkOpen(false)
+      showSuccess({
+        title: "Bulk Import Complete",
+        description: "Roles were imported successfully.",
+      })
     } catch (error) {
-      setBulkError((error as Error).message)
+      const message = (error as Error).message
+      setBulkError(message)
+      showError({
+        title: "Bulk Import Failed",
+        description: message,
+      })
     }
   }
 
@@ -314,11 +360,6 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
               </TableBody>
             </Table>
           )}
-          {deleteRoleMutation.isError ? (
-            <p className="p-5 text-sm text-destructive">
-              {(deleteRoleMutation.error as Error).message}
-            </p>
-          ) : null}
         </CardContent>
       </Card>
 
@@ -331,11 +372,6 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
             </DialogDescription>
           </DialogHeader>
           <RoleFormFields value={createForm} onChange={setCreateForm} />
-          {createRoleMutation.isError ? (
-            <p className="text-sm text-destructive">
-              {(createRoleMutation.error as Error).message}
-            </p>
-          ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
               Cancel
@@ -402,11 +438,6 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
             onChange={setEditForm}
             existingImageUrl={editingRole?.imageUrl}
           />
-          {updateRoleMutation.isError ? (
-            <p className="text-sm text-destructive">
-              {(updateRoleMutation.error as Error).message}
-            </p>
-          ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingRole(null)}>
               Cancel

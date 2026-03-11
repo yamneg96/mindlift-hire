@@ -8,26 +8,39 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAdminVerifyOtpMutation } from "@/lib/api/hooks"
 import { useAppStore } from "@/store/app-store"
+import { useFeedbackModal } from "@/components/feedback-modal-provider"
 
 export function AdminOtpPage({
   onNavigate,
 }: {
   onNavigate: (target: "admin-dashboard" | "admin-login" | "landing") => void
 }) {
+  const { showError, showSuccess } = useFeedbackModal()
   const [otp, setOtp] = useState("")
   const adminOtpEmail = useAppStore((state) => state.adminOtpEmail)
   const verifyOtpMutation = useAdminVerifyOtpMutation()
 
   const submitVerifyOtp = async () => {
     if (!adminOtpEmail || otp.length !== 6) {
+      showError({
+        title: "Invalid OTP",
+        description: "Enter the 6-digit code sent to your email.",
+      })
       return
     }
 
     try {
       await verifyOtpMutation.mutateAsync({ email: adminOtpEmail, otp })
+      showSuccess({
+        title: "Login Verified",
+        description: "OTP verified successfully. Redirecting to dashboard.",
+      })
       onNavigate("admin-dashboard")
-    } catch {
-      // no-op; message shown below
+    } catch (error) {
+      showError({
+        title: "Verification Failed",
+        description: (error as Error).message,
+      })
     }
   }
 
@@ -74,11 +87,6 @@ export function AdminOtpPage({
             >
               {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
             </Button>
-            {verifyOtpMutation.isError ? (
-              <p className="text-sm text-destructive">
-                {(verifyOtpMutation.error as Error).message}
-              </p>
-            ) : null}
             <Button
               className="w-full"
               variant="ghost"
