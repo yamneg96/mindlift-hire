@@ -33,7 +33,7 @@ async function resolveJobImageUrl(req: Request): Promise<string | undefined> {
     String(process.env.USE_CLOUD_STORAGE).toLowerCase() === "true";
 
   if (useCloud) {
-    return uploadToCloudStorage(imageFile.path, "role-images");
+    return uploadToCloudStorage(imageFile.path, "ml-role-image");
   }
 
   return buildPublicFileUrl(imageFile.path);

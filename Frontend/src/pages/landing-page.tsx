@@ -4,7 +4,15 @@ import { ArrowRight } from "lucide-react"
 import { EmptyState } from "@/components/empty-state"
 import { RoleCard } from "@/components/role-card"
 import { Button } from "@/components/ui/button"
-import { useRolesQuery } from "@/lib/api/hooks"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { usePublicRolesQuery } from "@/lib/api/hooks"
 import { ROLE_APPLICATIONS_ENABLED } from "@/lib/feature-flags"
 import { PublicLayout } from "@/layouts/public-layout"
 import type { RoleCardItem } from "@/lib/mock-data"
@@ -23,9 +31,13 @@ type Navigate = (
 ) => void
 
 export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
-  const { data: roles, isLoading } = useRolesQuery()
+  const { data: roles, isLoading } = usePublicRolesQuery(true)
   const setSelectedRoleId = useAppStore((state) => state.setSelectedRoleId)
   const [showAllRoles, setShowAllRoles] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">(
+    "all"
+  )
 
   const handleApplyForRole = (roleId: string) => {
     setSelectedRoleId(roleId)
@@ -42,14 +54,27 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
           description: role.description,
           openings: role.maxApplicants,
           image:
-            role.imageUrl?.trim() ||
+            role?.imageUrl?.trim() ||
             "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop",
         }))
       : []
 
+  const filteredRoles = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+    return resolvedRoles.filter((role) => {
+      const matchesName =
+        query.length === 0 || role.title.toLowerCase().includes(query)
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "open" && role.mode === "Open") ||
+        (statusFilter === "closed" && role.mode === "Closed")
+      return matchesName && matchesStatus
+    })
+  }, [resolvedRoles, searchTerm, statusFilter])
+
   const visibleRoles = useMemo(
-    () => (showAllRoles ? resolvedRoles : resolvedRoles.slice(0, 3)),
-    [resolvedRoles, showAllRoles]
+    () => (showAllRoles ? filteredRoles : filteredRoles.slice(0, 3)),
+    [filteredRoles, showAllRoles]
   )
 
   return (
@@ -93,6 +118,33 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
       </section>
 
       <section className="mx-auto flex w-full max-w-6xl flex-col justify-center px-4 pb-12 md:px-6">
+        <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Input
+            className="md:col-span-2"
+            placeholder="Search roles by name"
+            value={searchTerm}
+            onChange={(event) => {
+              setSearchTerm(event.target.value)
+              setShowAllRoles(false)
+            }}
+          />
+          <Select
+            value={statusFilter}
+            onValueChange={(value: "all" | "open" | "closed") => {
+              setStatusFilter(value)
+              setShowAllRoles(false)
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="mb-5 flex items-end justify-between">
           <div>
             <h2 className="text-3xl font-extrabold tracking-tight">
@@ -124,10 +176,10 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
               />
             ))}
           </div>
-        ) : resolvedRoles.length === 0 ? (
+        ) : filteredRoles.length === 0 ? (
           <EmptyState
-            title="No Open Roles Yet"
-            description="Your backend is connected. Once admin publishes open roles, they will appear here instantly."
+            title="No Matching Roles"
+            description="Try a different role name or status filter."
             actionLabel="Preview Sample Roles"
             onAction={() => onNavigate("minimal-application")}
           />
@@ -137,9 +189,11 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
               <RoleCard
                 key={role.id}
                 role={role}
-                applyDisabled={!ROLE_APPLICATIONS_ENABLED}
+                applyDisabled={
+                  !ROLE_APPLICATIONS_ENABLED || role.mode === "Closed"
+                }
                 onApply={(selectedRole) => {
-                  if (!ROLE_APPLICATIONS_ENABLED) {
+                  if (!ROLE_APPLICATIONS_ENABLED || role.mode === "Closed") {
                     return
                   }
                   handleApplyForRole(selectedRole.id)
@@ -148,7 +202,7 @@ export function LandingPage({ onNavigate }: { onNavigate: Navigate }) {
             ))}
           </div>
         )}
-        {resolvedRoles.length > 3 ? (
+        {filteredRoles.length > 3 ? (
           <button
             className="m-4 cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => setShowAllRoles((value) => !value)}

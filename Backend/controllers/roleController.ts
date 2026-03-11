@@ -37,14 +37,16 @@ async function resolveRoleImageUrl(req: Request): Promise<string | undefined> {
     String(process.env.USE_CLOUD_STORAGE).toLowerCase() === "true";
 
   if (useCloud) {
-    return uploadToCloudStorage(imageFile.path, "role-images");
+    return uploadToCloudStorage(imageFile.path, "ml-role-image");
   }
 
   return buildPublicFileUrl(imageFile.path);
 }
 
-export async function listRoles(_req: Request, res: Response) {
-  const roles = await RoleModel.find({ status: "open" })
+export async function listRoles(req: Request, res: Response) {
+  const includeClosed =
+    String(req.query.includeClosed ?? "false").toLowerCase() === "true";
+  const roles = await RoleModel.find(includeClosed ? {} : { status: "open" })
     .sort({ createdAt: -1 })
     .lean();
   return sendSuccess(res, roles);

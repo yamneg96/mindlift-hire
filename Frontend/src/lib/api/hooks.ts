@@ -28,6 +28,17 @@ export function useRolesQuery() {
   })
 }
 
+export function usePublicRolesQuery(includeClosed = false) {
+  return useQuery({
+    queryKey: ["roles", "public", includeClosed ? "all" : "open"],
+    queryFn: () =>
+      apiRequest(
+        includeClosed ? "/roles?includeClosed=true" : "/roles",
+        roleListSchema
+      ),
+  })
+}
+
 export function useCreateRoleMutation() {
   const queryClient = useQueryClient()
 

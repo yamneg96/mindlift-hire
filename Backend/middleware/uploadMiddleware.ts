@@ -24,7 +24,7 @@ function ensureUploadDirs() {
       root,
       path.join(root, "cv"),
       path.join(root, "portfolio"),
-      path.join(root, "role-images"),
+      path.join(root, "ml-role-image"),
     ];
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) {
@@ -39,7 +39,7 @@ function ensureUploadDirs() {
       uploadRoot: preferredRoot,
       cvDir: path.join(preferredRoot, "cv"),
       portfolioDir: path.join(preferredRoot, "portfolio"),
-      roleImagesDir: path.join(preferredRoot, "role-images"),
+      roleImagesDir: path.join(preferredRoot, "ml-role-image"),
     };
   } catch {
     createDirs(fallbackRoot);
@@ -47,7 +47,7 @@ function ensureUploadDirs() {
       uploadRoot: fallbackRoot,
       cvDir: path.join(fallbackRoot, "cv"),
       portfolioDir: path.join(fallbackRoot, "portfolio"),
-      roleImagesDir: path.join(fallbackRoot, "role-images"),
+      roleImagesDir: path.join(fallbackRoot, "ml-role-image"),
     };
   }
 }

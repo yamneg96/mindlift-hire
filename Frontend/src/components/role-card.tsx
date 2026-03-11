@@ -50,7 +50,7 @@ export function RoleCard({
             <span>{role.openings} openings</span>
           </div>
           <Button
-            className="gap-1 rounded-lg"
+            className="gap-1 rounded-lg disabled:cursor-not-allowed"
             size="sm"
             disabled={applyDisabled}
             onClick={() => onApply?.(role)}
