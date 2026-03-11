@@ -22,10 +22,16 @@ const app = express();
 const port = Number(process.env.PORT ?? 5000);
 
 function normalizeOrigin(value: string): string {
-  return value
+  const normalized = value
     .trim()
     .replace(/^['\"]|['\"]$/g, "")
     .replace(/\/+$/, "");
+
+  // Tolerate common typo like "http://localhost5173".
+  return normalized.replace(
+    /^(https?:\/\/localhost)(\d+)$/i,
+    (_match, host, port) => `${host}:${port}`,
+  );
 }
 
 const defaultAllowedOrigins = [
@@ -33,6 +39,7 @@ const defaultAllowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://mindlift-hire.vercel.app",
+  "https://mindlift-hire.vecel.app",
 ];
 
 const configuredAllowedOrigins = [

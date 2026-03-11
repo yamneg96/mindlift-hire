@@ -79,7 +79,11 @@ export function AdminLoginPage({
                 <div className="overflow-hidden rounded-lg border border-border p-3">
                   <GoogleLogin
                     onSuccess={loginWithGoogle}
-                    onError={() => setGoogleError("Google sign-in failed")}
+                    onError={() =>
+                      setGoogleError(
+                        "Google sign-in failed. Check Google Authorized JavaScript origins for this client ID (for example: http://localhost:5173 and https://mindlift-hire.vercel.app)."
+                      )
+                    }
                     shape="pill"
                     size="large"
                     text="continue_with"
