@@ -1,4 +1,19 @@
+function resolveEmailAssetBaseUrl() {
+  const configured = (
+    process.env.EMAIL_ASSET_BASE_URL ||
+    process.env.PUBLIC_BASE_URL ||
+    "https://mindlift-backend.vercel.app"
+  )
+    .trim()
+    .replace(/^['\"]|['\"]$/g, "")
+    .replace(/\/+$/, "");
+
+  return configured;
+}
+
 export function generateOtpEmail(otp: string) {
+  const logoUrl = `${resolveEmailAssetBaseUrl()}/public/MindLift-Logo.jpg`;
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +26,12 @@ export function generateOtpEmail(otp: string) {
   <div style="padding:24px;">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(15,23,42,0.08);">
       <div style="padding:18px 22px;border-bottom:1px solid #e2e8f0;background:linear-gradient(90deg,rgba(37,99,235,0.12),rgba(37,99,235,0));">
-        <p style="margin:0;font-size:18px;font-weight:800;letter-spacing:-0.02em;color:#2563eb;">MindLift</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#dbeafe;border:1px solid #bfdbfe;overflow:hidden;">
+            <img src="${logoUrl}" alt="MindLift logo" width="18" height="18" style="display:block;object-fit:cover;border-radius:9999px;" />
+          </span>
+          <p style="margin:0;font-size:18px;font-weight:800;letter-spacing:-0.02em;color:#2563eb;">MindLift</p>
+        </div>
       </div>
       <div style="padding:24px 22px;">
         <h1 style="margin:0 0 10px;font-size:24px;line-height:1.3;letter-spacing:-0.02em;">Admin Login Verification</h1>
