@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { RoleModel } from "../models/Role.js";
+import { ApplicationModel } from "../models/Application.js";
 import {
   createRoleBulkSchema,
   createRoleSchema,
@@ -155,10 +156,19 @@ export async function updateRole(req: Request, res: Response) {
 }
 
 export async function deleteRole(req: Request, res: Response) {
-  const deleted = await RoleModel.findByIdAndDelete(req.params.id);
+  const roleId = req.params.id;
+  const deleted = await RoleModel.findByIdAndDelete(roleId);
   if (!deleted) {
     return sendError(res, "Role not found", 404);
   }
 
-  return sendSuccess(res, { id: req.params.id }, "Role deleted");
+  const cascadeResult = await ApplicationModel.deleteMany({
+    $or: [{ roleId }, { secondRoleId: roleId }, { thirdRoleId: roleId }],
+  });
+
+  return sendSuccess(
+    res,
+    { id: roleId, deletedApplications: cascadeResult.deletedCount ?? 0 },
+    "Role and related applications deleted",
+  );
 }
