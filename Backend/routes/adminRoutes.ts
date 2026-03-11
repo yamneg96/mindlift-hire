@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  deleteApplicationByAdmin,
   getAdminStats,
   listApplicationsForAdmin,
   listUsersForAdmin,
@@ -22,6 +23,7 @@ adminRoutes.post("/verify-otp", adminVerifyOtp);
 adminRoutes.use(requireAuth, requireAdmin);
 adminRoutes.get("/applications", listApplicationsForAdmin);
 adminRoutes.patch("/applications/:id", updateApplicationByAdmin);
+adminRoutes.delete("/applications/:id", deleteApplicationByAdmin);
 adminRoutes.get("/stats", getAdminStats);
 adminRoutes.get("/dashboard", getAdminStats);
 adminRoutes.get("/users", listUsersForAdmin);

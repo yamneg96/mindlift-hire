@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { ArrowUpDown, Search } from "lucide-react"
+import { ArrowUpDown, Search, Trash2 } from "lucide-react"
 
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -34,9 +34,11 @@ const PAGE_SIZE = 5
 export function ApplicantTable({
   items,
   onViewDetails,
+  onDelete,
 }: {
   items: Applicant[]
   onViewDetails: (item: Applicant) => void
+  onDelete: (item: Applicant) => void
 }) {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -143,13 +145,23 @@ export function ApplicantTable({
                   <StatusBadge status={item.status} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onViewDetails(item)}
-                  >
-                    View Details
-                  </Button>
+                  <div className="inline-flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onViewDetails(item)}
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => onDelete(item)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -179,6 +191,14 @@ export function ApplicantTable({
                 onClick={() => onViewDetails(item)}
               >
                 View
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => onDelete(item)}
+              >
+                <Trash2 className="size-4" />
               </Button>
             </div>
           </div>

@@ -152,6 +152,17 @@ export async function updateApplicationByAdmin(req: Request, res: Response) {
   return sendSuccess(res, application, "Application updated");
 }
 
+export async function deleteApplicationByAdmin(req: Request, res: Response) {
+  const application = await ApplicationModel.findByIdAndDelete(req.params.id);
+  if (!application) {
+    return sendError(res, "Application not found", 404);
+  }
+
+  await AdminNoteModel.deleteMany({ applicationId: application._id });
+
+  return sendSuccess(res, { id: req.params.id }, "Application deleted");
+}
+
 export async function getAdminStats(_req: Request, res: Response) {
   const [
     distinctApplicants,

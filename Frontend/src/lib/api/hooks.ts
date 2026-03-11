@@ -18,6 +18,8 @@ import type { Applicant } from "@/lib/mock-data"
 import { useAppStore } from "@/store/app-store"
 
 const roleListSchema = z.array(roleSchema)
+const roleDeleteResponseSchema = z.object({ id: z.string() })
+const applicationDeleteResponseSchema = z.object({ id: z.string() })
 
 export function useRolesQuery() {
   return useQuery({
@@ -56,6 +58,33 @@ export function useCreateRoleMutation() {
         isFormData: true,
       })
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
+      queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+    },
+  })
+}
+
+export function useCreateRolesBulkMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (
+      payload: Array<{
+        title: string
+        description: string
+        department: string
+        imageUrl?: string
+        requiredSkills?: string[]
+        status?: "open" | "closed"
+        maxApplicants?: number
+      }>
+    ) =>
+      apiRequest("/roles/bulk", z.array(roleSchema), {
+        method: "POST",
+        body: payload,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
       queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
@@ -151,6 +180,22 @@ export function useUpdateRoleMutation() {
         isFormData: true,
       })
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
+      queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+    },
+  })
+}
+
+export function useDeleteRoleMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { id: string }) =>
+      apiRequest(`/roles/${payload.id}`, roleDeleteResponseSchema, {
+        method: "DELETE",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles", "open"] })
       queryClient.invalidateQueries({ queryKey: ["roles", "admin", "all"] })
@@ -322,6 +367,26 @@ export function useAdminUpdateApplicationMutation() {
       queryClient.invalidateQueries({ queryKey: ["admin", "applications"] })
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
       queryClient.setQueryData(["application", updated._id], updated)
+    },
+  })
+}
+
+export function useAdminDeleteApplicationMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { id: string }) =>
+      apiRequest(
+        `/admin/applications/${payload.id}`,
+        applicationDeleteResponseSchema,
+        {
+          method: "DELETE",
+        }
+      ),
+    onSuccess: (_deleted, payload) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "applications"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] })
+      queryClient.removeQueries({ queryKey: ["application", payload.id] })
     },
   })
 }

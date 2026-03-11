@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { BriefcaseBusiness, PlusCircle } from "lucide-react"
+import { BriefcaseBusiness, PlusCircle, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,6 +32,8 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   useAdminRolesQuery,
   useCreateRoleMutation,
+  useCreateRolesBulkMutation,
+  useDeleteRoleMutation,
   useUpdateRoleMutation,
 } from "@/lib/api/hooks"
 import type { RoleApi } from "@/lib/api/schemas"
@@ -79,12 +81,17 @@ function parseSkills(input: string): string[] {
 export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
   const rolesQuery = useAdminRolesQuery(true)
   const createRoleMutation = useCreateRoleMutation()
+  const createRolesBulkMutation = useCreateRolesBulkMutation()
   const updateRoleMutation = useUpdateRoleMutation()
+  const deleteRoleMutation = useDeleteRoleMutation()
 
   const [createForm, setCreateForm] = useState<RoleFormState>(emptyRoleForm)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<RoleApi | null>(null)
   const [editForm, setEditForm] = useState<RoleFormState>(emptyRoleForm)
+  const [bulkJsonInput, setBulkJsonInput] = useState("")
+  const [bulkError, setBulkError] = useState("")
+  const [isBulkOpen, setIsBulkOpen] = useState(false)
 
   const totalOpenRoles = useMemo(
     () =>
@@ -161,6 +168,55 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
     setEditingRole(null)
   }
 
+  const removeRole = async (role: RoleApi) => {
+    const confirmed = window.confirm(
+      `Delete role \"${role.title}\"? This action cannot be undone.`
+    )
+    if (!confirmed) {
+      return
+    }
+
+    await deleteRoleMutation.mutateAsync({ id: role._id })
+    if (editingRole?._id === role._id) {
+      setEditingRole(null)
+    }
+  }
+
+  const submitBulkCreate = async () => {
+    setBulkError("")
+
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(bulkJsonInput)
+    } catch {
+      setBulkError("Invalid JSON format. Please provide a JSON array.")
+      return
+    }
+
+    if (!Array.isArray(parsed)) {
+      setBulkError("Bulk payload must be a JSON array of roles.")
+      return
+    }
+
+    try {
+      await createRolesBulkMutation.mutateAsync(
+        parsed as Array<{
+          title: string
+          description: string
+          department: string
+          imageUrl?: string
+          requiredSkills?: string[]
+          status?: "open" | "closed"
+          maxApplicants?: number
+        }>
+      )
+      setBulkJsonInput("")
+      setIsBulkOpen(false)
+    } catch (error) {
+      setBulkError((error as Error).message)
+    }
+  }
+
   return (
     <AdminLayout current="roles" onNavigate={onNavigate}>
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -171,10 +227,15 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
             URL.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-          <PlusCircle className="size-4" />
-          New Role
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsBulkOpen(true)}>
+            Bulk JSON Import
+          </Button>
+          <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+            <PlusCircle className="size-4" />
+            New Role
+          </Button>
+        </div>
       </header>
 
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -229,19 +290,35 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
                     <TableCell>{role.status}</TableCell>
                     <TableCell>{role.maxApplicants}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => startEdit(role)}
-                      >
-                        Edit
-                      </Button>
+                      <div className="inline-flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEdit(role)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          disabled={deleteRoleMutation.isPending}
+                          onClick={() => void removeRole(role)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+          {deleteRoleMutation.isError ? (
+            <p className="p-5 text-sm text-destructive">
+              {(deleteRoleMutation.error as Error).message}
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -268,6 +345,42 @@ export function AdminRolesPage({ onNavigate }: { onNavigate: AdminNavigate }) {
               onClick={submitCreate}
             >
               {createRoleMutation.isPending ? "Publishing..." : "Publish Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+        <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
+            <DialogTitle>Bulk Create Roles (JSON)</DialogTitle>
+            <DialogDescription>
+              Paste a JSON array of roles. Example fields: title, description,
+              department, requiredSkills, status, maxApplicants.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Textarea
+              className="min-h-56 font-mono text-xs"
+              placeholder={`[\n  {\n    \"title\": \"Frontend Developer\",\n    \"description\": \"Build accessible UI components\",\n    \"department\": \"Engineering\",\n    \"requiredSkills\": [\"React\", \"TypeScript\"],\n    \"status\": \"open\",\n    \"maxApplicants\": 100\n  }\n]`}
+              value={bulkJsonInput}
+              onChange={(event) => setBulkJsonInput(event.target.value)}
+            />
+            {bulkError ? (
+              <p className="mt-2 text-sm text-destructive">{bulkError}</p>
+            ) : null}
+          </div>
+          <DialogFooter className="shrink-0 border-t border-border px-6 py-4">
+            <Button variant="outline" onClick={() => setIsBulkOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={createRolesBulkMutation.isPending}
+              onClick={submitBulkCreate}
+            >
+              {createRolesBulkMutation.isPending
+                ? "Importing..."
+                : "Import Roles"}
             </Button>
           </DialogFooter>
         </DialogContent>

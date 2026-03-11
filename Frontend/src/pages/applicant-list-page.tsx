@@ -5,6 +5,7 @@ import { ApplicantTable } from "@/features/admin/applicant-table"
 import { Button } from "@/components/ui/button"
 import { API_BASE } from "@/lib/api/client"
 import {
+  useAdminDeleteApplicationMutation,
   mapApplicationToApplicant,
   useAdminApplicationsQuery,
 } from "@/lib/api/hooks"
@@ -31,6 +32,7 @@ export function ApplicantListPage({
   )
   const token = useAppStore((state) => state.token)
   const applicationsQuery = useAdminApplicationsQuery({ page: 1, limit: 50 })
+  const deleteApplicationMutation = useAdminDeleteApplicationMutation()
   const applicants = (applicationsQuery.data?.items ?? []).map(
     mapApplicationToApplicant
   )
@@ -89,8 +91,23 @@ export function ApplicantListPage({
             setSelectedApplicationId(item.id)
             onNavigate("applicant-details")
           }}
+          onDelete={(item) => {
+            const confirmed = window.confirm(
+              `Delete applicant \"${item.name}\"? This cannot be undone.`
+            )
+            if (!confirmed) {
+              return
+            }
+
+            void deleteApplicationMutation.mutateAsync({ id: item.id })
+          }}
         />
       )}
+      {deleteApplicationMutation.isError ? (
+        <p className="mt-3 text-sm text-destructive">
+          {(deleteApplicationMutation.error as Error).message}
+        </p>
+      ) : null}
     </AdminLayout>
   )
 }

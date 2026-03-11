@@ -25,3 +25,5 @@ export const createRoleSchema = z.object({
 });
 
 export const updateRoleSchema = createRoleSchema.partial();
+
+export const createRoleBulkSchema = z.array(createRoleSchema).min(1).max(100);

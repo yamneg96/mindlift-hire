@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 import path from "node:path";
 
 import { RoleModel } from "../models/Role.js";
-import { createRoleSchema, updateRoleSchema } from "../zod/role.js";
+import {
+  createRoleBulkSchema,
+  createRoleSchema,
+  updateRoleSchema,
+} from "../zod/role.js";
 import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 import { uploadToCloudStorage } from "../config/cloudStorage.js";
@@ -73,6 +77,27 @@ export async function createRole(req: Request, res: Response) {
   });
 
   return sendSuccess(res, role, "Role created", 201);
+}
+
+export async function createRolesBulk(req: Request, res: Response) {
+  if (!req.user) {
+    return sendError(res, "Unauthorized", 401);
+  }
+
+  const roles = createRoleBulkSchema.parse(req.body);
+
+  const creatorId = req.user.id;
+  const hasObjectIdCreator = mongoose.Types.ObjectId.isValid(creatorId);
+  const created = await RoleModel.insertMany(
+    roles.map((item) => ({
+      ...item,
+      imageUrl: item.imageUrl?.trim() ?? "",
+      ...(hasObjectIdCreator ? { createdBy: creatorId } : {}),
+      createdByEmail: req.user?.email,
+    })),
+  );
+
+  return sendSuccess(res, created, "Roles created", 201);
 }
 
 export async function updateRole(req: Request, res: Response) {

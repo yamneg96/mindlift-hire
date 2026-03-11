@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   createRole,
+  createRolesBulk,
   deleteRole,
   listRoles,
   listRolesForAdmin,
@@ -15,6 +16,7 @@ export const roleRoutes = Router();
 
 roleRoutes.get("/", listRoles);
 roleRoutes.get("/admin/all", requireAuth, requireAdmin, listRolesForAdmin);
+roleRoutes.post("/bulk", requireAuth, requireAdmin, createRolesBulk);
 roleRoutes.post(
   "/",
   requireAuth,
