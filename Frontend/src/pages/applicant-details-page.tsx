@@ -102,6 +102,10 @@ export function ApplicantDetailsPage({
                 <CardContent className="grid grid-cols-1 gap-3 p-5 text-sm md:grid-cols-2">
                   <Info label="Name" value={applicant.name} />
                   <Info label="Role" value={applicant.role} />
+                  <Info
+                    label="Role Choices"
+                    value={applicant.roleChoices.join(" | ")}
+                  />
                   <Info label="Email" value={applicant.email} />
                   <Info label="Phone" value={applicant.phone} />
                   <Info label="Location" value={applicant.location} />

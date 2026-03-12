@@ -4,7 +4,7 @@ import { RoleModel } from "../models/Role.js";
 import { applySchema } from "../zod/application.js";
 import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
-import { uploadToCloudStorage } from "../config/cloudStorage.js";
+import { isCloudStorageEnabled, uploadToCloudStorage, } from "../config/cloudStorage.js";
 import { sendApplicantNotificationEmail } from "../services/email/emailService.js";
 function isRoleApplicationEnabled() {
     return (String(process.env.ROLE_APPLICATIONS_ENABLED ?? "true").toLowerCase() ===
@@ -66,11 +66,7 @@ export async function applyForRole(req, res) {
             title: primaryRole.title,
         }
         : null;
-    const cloudCredentialsConfigured = Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
-        Boolean(process.env.CLOUDINARY_API_KEY) &&
-        Boolean(process.env.CLOUDINARY_API_SECRET);
-    const useCloud = String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false" &&
-        cloudCredentialsConfigured;
+    const useCloud = isCloudStorageEnabled();
     const cvUrl = useCloud
         ? await uploadToCloudStorage(cvFile.path, "cv")
         : buildPublicFileUrl(req, cvFile.path);
@@ -120,7 +116,10 @@ export async function applyForRole(req, res) {
     return sendSuccess(res, application, "Application submitted", 201);
 }
 export async function getApplicationById(req, res) {
-    const application = await ApplicationModel.findById(req.params.id).populate("roleId", "title department status");
+    const application = await ApplicationModel.findById(req.params.id)
+        .populate("roleId", "title department status")
+        .populate("secondRoleId", "title department status")
+        .populate("thirdRoleId", "title department status");
     if (!application) {
         return sendError(res, "Application not found", 404);
     }

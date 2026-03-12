@@ -410,6 +410,25 @@ export function useAdminDeleteApplicationMutation() {
 
 export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
   const rawRole = item.roleId
+  const rawSecondRole = item.secondRoleId
+  const rawThirdRole = item.thirdRoleId
+
+  const resolveRoleTitle = (
+    role:
+      | ApplicationItemApi["roleId"]
+      | ApplicationItemApi["secondRoleId"]
+      | ApplicationItemApi["thirdRoleId"]
+  ) => {
+    if (!role) {
+      return null
+    }
+
+    if (typeof role === "string") {
+      return "Unknown Role"
+    }
+
+    return role.title ?? "Unknown Role"
+  }
 
   const roleObj = !rawRole
     ? { _id: "unknown", title: "General Application" }
@@ -425,6 +444,11 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
   }
 
   const name = item.applicantName ?? "Unknown Applicant"
+  const roleChoices = [
+    resolveRoleTitle(rawRole),
+    resolveRoleTitle(rawSecondRole),
+    resolveRoleTitle(rawThirdRole),
+  ].filter((choice): choice is string => Boolean(choice))
 
   return {
     id: item._id,
@@ -437,6 +461,7 @@ export function mapApplicationToApplicant(item: ApplicationItemApi): Applicant {
       .slice(0, 2)
       .toUpperCase(),
     role: roleObj.title ?? "Unknown Role",
+    roleChoices,
     submittedAt: item.appliedAt
       ? String(item.appliedAt)
       : new Date().toISOString(),

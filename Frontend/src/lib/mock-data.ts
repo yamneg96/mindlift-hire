@@ -14,6 +14,7 @@ export type Applicant = {
   email: string
   initials: string
   role: string
+  roleChoices: string[]
   submittedAt: string
   score: number
   status: "new" | "reviewing" | "shortlisted" | "rejected"
@@ -88,6 +89,7 @@ export const applicants: Applicant[] = [
     email: "alex.thompson@example.com",
     initials: "AT",
     role: "Senior UX Designer",
+    roleChoices: ["Senior UX Designer"],
     submittedAt: "2026-03-01",
     score: 92,
     status: "shortlisted",
@@ -121,6 +123,7 @@ export const applicants: Applicant[] = [
     email: "s.chen@tech.io",
     initials: "SC",
     role: "Frontend Developer",
+    roleChoices: ["Frontend Developer"],
     submittedAt: "2026-02-28",
     score: 85,
     status: "reviewing",
@@ -148,6 +151,7 @@ export const applicants: Applicant[] = [
     email: "marcus.t@design.com",
     initials: "MT",
     role: "UX Researcher",
+    roleChoices: ["UX Researcher"],
     submittedAt: "2026-02-26",
     score: 78,
     status: "new",
@@ -174,6 +178,7 @@ export const applicants: Applicant[] = [
     email: "elena.ro@global.org",
     initials: "ER",
     role: "Product Manager",
+    roleChoices: ["Product Manager"],
     submittedAt: "2026-02-24",
     score: 45,
     status: "rejected",

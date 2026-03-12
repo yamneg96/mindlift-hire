@@ -10,8 +10,37 @@ export type UploadTarget =
 
 let cloudinaryConfigured = false;
 
+export function isCloudStorageEnabled() {
+  return (
+    String(process.env.USE_CLOUD_STORAGE ?? "true").toLowerCase() !== "false"
+  );
+}
+
+function hasCloudinaryCredentials() {
+  return (
+    Boolean(process.env.CLOUDINARY_URL) ||
+    (Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
+      Boolean(process.env.CLOUDINARY_API_KEY) &&
+      Boolean(process.env.CLOUDINARY_API_SECRET))
+  );
+}
+
 function ensureCloudinaryConfigured() {
   if (cloudinaryConfigured) {
+    return;
+  }
+
+  if (!isCloudStorageEnabled()) {
+    throw new Error("Cloud storage is disabled");
+  }
+
+  const cloudinaryUrl = process.env.CLOUDINARY_URL?.trim();
+  if (cloudinaryUrl) {
+    cloudinary.config({
+      cloudinary_url: cloudinaryUrl,
+      secure: true,
+    });
+    cloudinaryConfigured = true;
     return;
   }
 
@@ -19,9 +48,9 @@ function ensureCloudinaryConfigured() {
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-  if (!cloudName || !apiKey || !apiSecret) {
+  if (!hasCloudinaryCredentials() || !cloudName || !apiKey || !apiSecret) {
     throw new Error(
-      "Cloud storage enabled but Cloudinary credentials are missing. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.",
+      "Cloud storage enabled but Cloudinary credentials are missing. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET.",
     );
   }
 

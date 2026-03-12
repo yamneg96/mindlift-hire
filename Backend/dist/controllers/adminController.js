@@ -44,6 +44,8 @@ export async function listApplicationsForAdmin(req, res) {
     const skip = (query.page - 1) * query.limit;
     let applications = await ApplicationModel.find(dbQuery)
         .populate("roleId", "title department")
+        .populate("secondRoleId", "title department")
+        .populate("thirdRoleId", "title department")
         .sort({ appliedAt: -1 })
         .skip(skip)
         .limit(query.limit)
