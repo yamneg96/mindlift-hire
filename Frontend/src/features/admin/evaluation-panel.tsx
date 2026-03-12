@@ -60,7 +60,7 @@ export function EvaluationPanel({
   const [scores, setScores] = useState(applicant.evaluation)
   const [notes, setNotes] = useState(applicant.notes)
   const [currentStatus, setCurrentStatus] = useState(initialStatus)
-  const [activeTab, setActiveTab] = useState<"job" | "role">("job")
+  const [activeTab, setActiveTab] = useState<"job" | "role">("role")
   const [selectedRole, setSelectedRole] = useState("")
   const [roleNote, setRoleNote] = useState("")
   const updateMutation = useAdminUpdateApplicationMutation()

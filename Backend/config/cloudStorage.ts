@@ -73,11 +73,17 @@ export async function uploadToCloudStorage(
   const normalizedPath = filePath.replace(/\\/g, "/");
   const baseFolder =
     process.env.CLOUDINARY_FOLDER?.trim() || "mindlift-role/uploads";
-  const folder = `${baseFolder}/${target}`;
+  const fileExtension = path.extname(normalizedPath).toLowerCase();
+  const isPdf = fileExtension === ".pdf";
+  const folder =
+    target === "cv" ? `${baseFolder}/ml-cv` : `${baseFolder}/${target}`;
+  const resourceType = target === "cv" && isPdf ? "image" : "raw";
 
   const uploadResult = await cloudinary.uploader.upload(normalizedPath, {
     folder,
-    resource_type: "raw",
+    resource_type: resourceType,
+    type: "upload",
+    access_mode: "public",
     use_filename: true,
     unique_filename: true,
     overwrite: false,
