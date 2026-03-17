@@ -38,7 +38,6 @@ import {
   useCreateJobMutation,
 } from "@/lib/api/hooks"
 import { AdminLayout } from "@/layouts/admin-layout"
-import { activityFeed } from "@/lib/mock-data"
 import { useAppStore } from "@/store/app-store"
 
 export function AdminDashboardPage({
@@ -92,6 +91,65 @@ export function AdminDashboardPage({
   const recentItems = (recentQuery.data?.items ?? []).map(
     mapApplicationToApplicant
   )
+  const roleChartItems = (statsQuery.data?.applicationsPerRole ?? []).slice(
+    0,
+    5
+  )
+  const roleChartColors = [
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
+  ]
+  const totalRoleApplications = roleChartItems.reduce(
+    (sum, item) => sum + item.count,
+    0
+  )
+  const rolePieGradient =
+    totalRoleApplications > 0
+      ? `conic-gradient(${roleChartItems
+          .map((item, index) => {
+            const startDeg = roleChartItems
+              .slice(0, index)
+              .reduce((sum, segment) => sum + segment.count, 0)
+            const endDeg = startDeg + item.count
+
+            return `${roleChartColors[index % roleChartColors.length]} ${(startDeg / totalRoleApplications) * 360}deg ${(endDeg / totalRoleApplications) * 360}deg`
+          })
+          .join(", ")})`
+      : ""
+
+  const activityItems = (recentQuery.data?.items ?? [])
+    .slice(0, 5)
+    .map((item) => {
+      const role = item.roleId
+      const roleTitle =
+        !role || typeof role === "string"
+          ? "Unknown Role"
+          : (role.title ?? "Unknown Role")
+
+      const statusLabel =
+        item.status === "pending"
+          ? "pending review"
+          : item.status === "shortlisted"
+            ? "shortlisted"
+            : item.status === "approved"
+              ? "approved"
+              : "rejected"
+
+      const appliedAt = item.appliedAt ? new Date(String(item.appliedAt)) : null
+      const appliedAtLabel =
+        appliedAt && !Number.isNaN(appliedAt.getTime())
+          ? appliedAt.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "an unknown date"
+
+      return `${item.applicantName ?? "Unknown Applicant"} submitted for ${roleTitle} (${statusLabel}) on ${appliedAtLabel}.`
+    })
 
   const submitNewPosting = async () => {
     const parsedMax = Number(maxApplicants)
@@ -266,45 +324,67 @@ export function AdminDashboardPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-5">
-            <div className="grid h-52 grid-cols-5 items-end gap-3">
-              {[
-                ...(statsQuery.data?.applicationsPerRole.map(
-                  (item) => item.count
-                ) ?? []),
-                0,
-                0,
-                0,
-                0,
-                0,
-              ]
-                .slice(0, 5)
-                .map((count, _idx, arr) => {
-                  const max = Math.max(...arr, 1)
-                  return Math.round((count / max) * 100)
-                })
-                .map((value, index) => (
+            {statsQuery.isLoading ? (
+              <div className="text-sm text-muted-foreground">
+                Loading role application data...
+              </div>
+            ) : roleChartItems.length === 0 ? (
+              <EmptyState
+                title="No Role Application Data"
+                description="Role-level application counts will appear here as applicants submit forms."
+              />
+            ) : (
+              <div className="grid gap-6 md:grid-cols-[220px_1fr] md:items-center">
+                <div className="flex justify-center">
                   <div
-                    key={value + index}
-                    className="flex flex-col items-center gap-2"
+                    className="relative size-44 rounded-full border border-border"
+                    style={{ backgroundImage: rolePieGradient }}
                   >
-                    <div
-                      className={
-                        index === 1
-                          ? "w-full rounded-t-md bg-primary"
-                          : "w-full rounded-t-md bg-primary/20"
-                      }
-                      style={{ height: `${value}%` }}
-                    />
-                    <span className="text-[10px] font-semibold text-muted-foreground">
-                      {index === 0 ? "Mentors" : null}
-                      {index === 1 ? "Counselors" : null}
-                      {index === 2 ? "Tutors" : null}
-                      {index === 3 ? "Admins" : null}
-                      {index === 4 ? "Events" : null}
-                    </span>
+                    <div className="absolute inset-7 flex items-center justify-center rounded-full border border-border bg-card text-center">
+                      <div>
+                        <p className="text-xl font-bold">
+                          {totalRoleApplications}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Applications
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                ))}
-            </div>
+                </div>
+
+                <div className="space-y-2">
+                  {roleChartItems.map((item, index) => {
+                    const percentage = Math.round(
+                      (item.count / totalRoleApplications) * 100
+                    )
+
+                    return (
+                      <div
+                        key={item.roleId}
+                        className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2"
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{
+                              backgroundColor:
+                                roleChartColors[index % roleChartColors.length],
+                            }}
+                          />
+                          <span className="truncate text-sm font-medium">
+                            {item.roleTitle}
+                          </span>
+                        </div>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {item.count} ({percentage}%)
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -316,14 +396,25 @@ export function AdminDashboardPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 p-5">
-            {activityFeed.map((entry) => (
-              <div
-                key={entry}
-                className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground"
-              >
-                {entry}
+            {recentQuery.isLoading ? (
+              <div className="text-sm text-muted-foreground">
+                Loading recent activity...
               </div>
-            ))}
+            ) : activityItems.length === 0 ? (
+              <EmptyState
+                title="No Activity Yet"
+                description="Recent admin-relevant activity will show up here as applications come in."
+              />
+            ) : (
+              activityItems.map((entry) => (
+                <div
+                  key={entry}
+                  className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground"
+                >
+                  {entry}
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </section>
