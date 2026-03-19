@@ -84,6 +84,8 @@ export async function applyForRole(req: Request, res: Response) {
   const cvFileExtension = cvFile.originalname.includes(".")
     ? cvFile.originalname.slice(cvFile.originalname.lastIndexOf("."))
     : ".pdf";
+  const cvResourceType: "image" | "raw" =
+    cvFile.mimetype === "application/pdf" ? "image" : "raw";
 
   // eslint-disable-next-line no-console
   console.info(
@@ -96,11 +98,11 @@ export async function applyForRole(req: Request, res: Response) {
       file: cvFile.buffer,
       fileName: `cv_${Date.now()}${cvFileExtension}`,
       folder: "mindlift/cv",
-      resourceType: "raw",
+      resourceType: cvResourceType,
     });
     // eslint-disable-next-line no-console
     console.info(
-      `[application] CV upload completed: public_id=${cvUpload.publicId}`,
+      `[application] CV upload completed: public_id=${cvUpload.publicId}, resource_type=${cvResourceType}, secure_url=${cvUpload.secureUrl}`,
     );
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -124,7 +126,7 @@ export async function applyForRole(req: Request, res: Response) {
       portfolioUrl = portfolioUpload.secureUrl;
       // eslint-disable-next-line no-console
       console.info(
-        `[application] Portfolio upload completed: public_id=${portfolioUpload.publicId}`,
+        `[application] Portfolio upload completed: public_id=${portfolioUpload.publicId}, secure_url=${portfolioUpload.secureUrl}`,
       );
     } catch (error) {
       // eslint-disable-next-line no-console
