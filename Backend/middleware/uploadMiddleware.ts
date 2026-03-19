@@ -15,60 +15,29 @@ function resolveUploadRoot() {
   return path.resolve("uploads");
 }
 
-function ensureUploadDirs() {
+function ensureRoleImageDir() {
   const preferredRoot = resolveUploadRoot();
   const fallbackRoot = path.join(os.tmpdir(), "mindlift-role", "uploads");
-
-  const createDirs = (root: string) => {
-    const dirs = [
-      root,
-      path.join(root, "cv"),
-      path.join(root, "portfolio"),
-      path.join(root, "ml-role-image"),
-      path.join(root, "ml-job-image"),
-    ];
-    for (const dir of dirs) {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-    }
-  };
+  const preferredRoleImagePath = path.join(preferredRoot, "ml-role-image");
+  const fallbackRoleImagePath = path.join(fallbackRoot, "ml-role-image");
 
   try {
-    createDirs(preferredRoot);
-    return {
-      uploadRoot: preferredRoot,
-      cvDir: path.join(preferredRoot, "cv"),
-      portfolioDir: path.join(preferredRoot, "portfolio"),
-      roleImagesDir: path.join(preferredRoot, "ml-role-image"),
-    };
+    if (!fs.existsSync(preferredRoleImagePath)) {
+      fs.mkdirSync(preferredRoleImagePath, { recursive: true });
+    }
+
+    return preferredRoleImagePath;
   } catch {
-    createDirs(fallbackRoot);
-    return {
-      uploadRoot: fallbackRoot,
-      cvDir: path.join(fallbackRoot, "cv"),
-      portfolioDir: path.join(fallbackRoot, "portfolio"),
-      roleImagesDir: path.join(fallbackRoot, "ml-role-image"),
-    };
+    if (!fs.existsSync(fallbackRoleImagePath)) {
+      fs.mkdirSync(fallbackRoleImagePath, { recursive: true });
+    }
+
+    return fallbackRoleImagePath;
   }
 }
 
-const { cvDir, portfolioDir, roleImagesDir } = ensureUploadDirs();
-
-const storage = multer.diskStorage({
-  destination: (_req, file, cb) => {
-    if (file.fieldname === "cv") {
-      cb(null, cvDir);
-      return;
-    }
-
-    cb(null, portfolioDir);
-  },
-  filename: (_req, file, cb) => {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
-    cb(null, `${Date.now()}-${safeName}`);
-  },
-});
+const roleImagesDir = ensureRoleImageDir();
+const memoryStorage = multer.memoryStorage();
 
 const allowedMimes = new Set([
   "application/pdf",
@@ -89,7 +58,7 @@ function fileFilter(
 }
 
 export const upload = multer({
-  storage,
+  storage: memoryStorage,
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,

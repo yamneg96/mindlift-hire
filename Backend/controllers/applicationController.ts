@@ -1,4 +1,3 @@
-import path from "node:path";
 import type { Request, Response } from "express";
 
 import { ApplicationModel } from "../models/Application.js";
@@ -8,7 +7,7 @@ import { parseBody } from "../utils/validation.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 import {
   isCloudStorageEnabled,
-  uploadToCloudStorage,
+  uploadBufferToCloudStorageWithMetadata,
 } from "../config/cloudStorage.js";
 import { sendApplicantNotificationEmail } from "../services/email/emailService.js";
 
@@ -17,34 +16,6 @@ function isRoleApplicationEnabled() {
     String(process.env.ROLE_APPLICATIONS_ENABLED ?? "true").toLowerCase() ===
     "true"
   );
-}
-
-function buildPublicFileUrl(req: Request, filePath: string) {
-  const normalized = filePath.replace(/\\/g, "/");
-  const configuredBase = (process.env.UPLOAD_BASE_URL ?? "").trim();
-  // Local uploads should never be prefixed with Cloudinary base URLs.
-  const requestBase = `${req.protocol}://${req.get("host") ?? ""}`.replace(
-    /\/$/,
-    "",
-  );
-  const base = /res\.cloudinary\.com/i.test(configuredBase)
-    ? ""
-    : configuredBase || requestBase;
-  const normalizedBase = base.replace(/\/$/, "");
-  if (normalized.startsWith("/uploads")) {
-    return normalizedBase ? `${normalizedBase}${normalized}` : normalized;
-  }
-
-  const uploadsIndex = normalized.indexOf("uploads/");
-  if (uploadsIndex >= 0) {
-    return normalizedBase
-      ? `${normalizedBase}/${normalized.slice(uploadsIndex)}`
-      : `/${normalized.slice(uploadsIndex)}`;
-  }
-
-  return normalizedBase
-    ? `${normalizedBase}/${path.basename(normalized)}`
-    : `/${path.basename(normalized)}`;
 }
 
 export async function applyForRole(req: Request, res: Response) {
@@ -70,6 +41,10 @@ export async function applyForRole(req: Request, res: Response) {
 
   if (!cvFile) {
     return sendError(res, "CV file is required", 400);
+  }
+
+  if (!isCloudStorageEnabled()) {
+    return sendError(res, "CV upload failed", 503, "Cloud storage is disabled");
   }
 
   const selectedRoleIds = [body.roleId, body.secondRoleId, body.thirdRoleId]
@@ -106,16 +81,56 @@ export async function applyForRole(req: Request, res: Response) {
         }
       : null;
 
-  const useCloud = isCloudStorageEnabled();
-  const cvUrl = useCloud
-    ? await uploadToCloudStorage(cvFile.path, "cv")
-    : buildPublicFileUrl(req, cvFile.path);
+  const cvFileExtension = cvFile.originalname.includes(".")
+    ? cvFile.originalname.slice(cvFile.originalname.lastIndexOf("."))
+    : ".pdf";
+
+  // eslint-disable-next-line no-console
+  console.info(
+    `[application] CV upload started for ${body.email.toLowerCase()} (${cvFile.originalname}, ${cvFile.size} bytes)`,
+  );
+
+  let cvUpload: { secureUrl: string; publicId: string };
+  try {
+    cvUpload = await uploadBufferToCloudStorageWithMetadata({
+      file: cvFile.buffer,
+      fileName: `cv_${Date.now()}${cvFileExtension}`,
+      folder: "mindlift/cv",
+      resourceType: "raw",
+    });
+    // eslint-disable-next-line no-console
+    console.info(
+      `[application] CV upload completed: public_id=${cvUpload.publicId}`,
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("[application] CV upload failed", error);
+    return sendError(res, "CV upload failed", 500);
+  }
 
   let portfolioUrl = "";
   if (portfolioFile) {
-    portfolioUrl = useCloud
-      ? await uploadToCloudStorage(portfolioFile.path, "portfolio")
-      : buildPublicFileUrl(req, portfolioFile.path);
+    // eslint-disable-next-line no-console
+    console.info(
+      `[application] Portfolio upload started for ${body.email.toLowerCase()} (${portfolioFile.originalname}, ${portfolioFile.size} bytes)`,
+    );
+    try {
+      const portfolioUpload = await uploadBufferToCloudStorageWithMetadata({
+        file: portfolioFile.buffer,
+        fileName: `portfolio_${Date.now()}_${portfolioFile.originalname}`,
+        folder: "mindlift/portfolio",
+        resourceType: "raw",
+      });
+      portfolioUrl = portfolioUpload.secureUrl;
+      // eslint-disable-next-line no-console
+      console.info(
+        `[application] Portfolio upload completed: public_id=${portfolioUpload.publicId}`,
+      );
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("[application] Portfolio upload failed", error);
+      return sendError(res, "CV upload failed", 500);
+    }
   }
 
   const application = await ApplicationModel.create({
@@ -131,7 +146,8 @@ export async function applyForRole(req: Request, res: Response) {
     roleId: body.roleId,
     ...(body.secondRoleId ? { secondRoleId: body.secondRoleId } : {}),
     ...(body.thirdRoleId ? { thirdRoleId: body.thirdRoleId } : {}),
-    cvUrl,
+    cvUrl: cvUpload.secureUrl,
+    cvPublicId: cvUpload.publicId,
     portfolioUrl,
     motivationLetter: body.motivationLetter ?? "",
     additionalAnswers: {

@@ -8,6 +8,12 @@ export type UploadTarget =
   | "ml-role-image"
   | "ml-job-image";
 
+export type CloudStorageUploadResult = {
+  secureUrl: string;
+  publicId: string;
+  resourceType: string;
+};
+
 let cloudinaryConfigured = false;
 
 export function isCloudStorageEnabled() {
@@ -102,11 +108,21 @@ export async function uploadBufferToCloudStorage(options: {
   folder: string;
   resourceType?: "image" | "raw" | "video" | "auto";
 }): Promise<string> {
+  const result = await uploadBufferToCloudStorageWithMetadata(options);
+  return result.secureUrl;
+}
+
+export async function uploadBufferToCloudStorageWithMetadata(options: {
+  file: Buffer;
+  fileName: string;
+  folder: string;
+  resourceType?: "image" | "raw" | "video" | "auto";
+}): Promise<CloudStorageUploadResult> {
   ensureCloudinaryConfigured();
 
   const normalizedFolder = options.folder.replace(/^\/+|\/+$/g, "");
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<CloudStorageUploadResult>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: normalizedFolder,
@@ -117,12 +133,18 @@ export async function uploadBufferToCloudStorage(options: {
         filename_override: options.fileName,
       },
       (error, result) => {
-        if (error || !result?.secure_url) {
+        if (error || !result?.secure_url || !result.public_id) {
           reject(error ?? new Error("Cloud upload failed"));
           return;
         }
 
-        resolve(result.secure_url);
+        resolve({
+          secureUrl: result.secure_url,
+          publicId: result.public_id,
+          resourceType: String(
+            result.resource_type ?? options.resourceType ?? "auto",
+          ),
+        });
       },
     );
 

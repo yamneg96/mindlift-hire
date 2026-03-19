@@ -25,6 +25,7 @@ const applicationSchema = new Schema(
     secondRoleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
     thirdRoleId: { type: Schema.Types.ObjectId, ref: "Role", required: false },
     cvUrl: { type: String, required: true },
+    cvPublicId: { type: String, default: "" },
     portfolioUrl: { type: String, default: "" },
     motivationLetter: { type: String, default: "" },
     additionalAnswers: {
