@@ -122,7 +122,7 @@ export function AdminLayout({
         <div className="mb-3 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
           Signed in as Admin Recruiter
         </div>
-        <Button className="w-full" variant="outline" onClick={handleLogout}>
+        <Button className="w-full" variant="logout" onClick={handleLogout}>
           Logout
         </Button>
       </div>
@@ -174,7 +174,7 @@ export function AdminLayout({
             >
               Public Site
             </Button>
-            <Button size="sm" variant="outline" onClick={handleLogout}>
+            <Button size="sm" variant="logout" onClick={handleLogout}>
               Logout
             </Button>
           </div>

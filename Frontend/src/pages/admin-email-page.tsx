@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
+import { useAppStore } from "@/store/app-store"
 import { Mail, Send } from "lucide-react"
 import { z } from "zod"
 
@@ -42,6 +43,20 @@ export function AdminEmailPage({
   const [message, setMessage] = useState(
     "Thank you for applying to MindLift. We are currently reviewing applications and will contact shortlisted candidates shortly."
   )
+
+  // Prefill from emailIntent (for role assignment)
+  const emailIntent = useAppStore((state) => state.emailIntent)
+  const setEmailIntent = useAppStore((state) => state.setEmailIntent)
+
+  useEffect(() => {
+    if (emailIntent) {
+      if (emailIntent.recipient) setSelectedEmails([emailIntent.recipient])
+      if (emailIntent.subject) setSubject(emailIntent.subject)
+      if (emailIntent.message) setMessage(emailIntent.message)
+      setEmailIntent(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailIntent])
 
   const applicants = useMemo(
     () => (applicationsQuery.data?.items ?? []).map(mapApplicationToApplicant),
@@ -109,7 +124,8 @@ export function AdminEmailPage({
     } catch {
       showError({
         title: "Email Send Failed",
-        description: (sendEmailMutation.error as Error)?.message ?? "Request failed.",
+        description:
+          (sendEmailMutation.error as Error)?.message ?? "Request failed.",
       })
     }
   }

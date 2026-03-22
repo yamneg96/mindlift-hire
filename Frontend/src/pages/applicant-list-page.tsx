@@ -2,6 +2,8 @@ import { Download } from "lucide-react"
 
 import { EmptyState } from "@/components/empty-state"
 import { ApplicantTable } from "@/features/admin/applicant-table"
+import { RoleDecisionEngine } from "@/features/admin/role-decision-engine"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { API_BASE } from "@/lib/api/client"
 import {
@@ -41,85 +43,112 @@ export function ApplicantListPage({
 
   return (
     <AdminLayout current="applicants" onNavigate={onNavigate}>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">Applicants</h1>
-          <p className="text-sm text-muted-foreground">
-            {applicants.length} candidates available for review
-          </p>
-        </div>
-        <Button
-          className="gap-2"
-          variant="outline"
-          onClick={() => {
-            const url = `${API_BASE}/admin/applications?export=csv`
-            if (!token) {
-              return
-            }
-            fetch(url, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-              .then((res) => res.blob())
-              .then((blob) => {
-                const link = document.createElement("a")
-                link.href = URL.createObjectURL(blob)
-                link.download = "applications.csv"
-                link.click()
-                URL.revokeObjectURL(link.href)
-              })
-              .catch(() => {
-                // no-op; list still usable if export fails
-              })
-          }}
-        >
-          <Download className="size-4" />
-          Export CSV
-        </Button>
-      </header>
+      <Tabs defaultValue="list" className="w-full flex-col">
+        <TabsList className="mb-6 gap-2">
+          <TabsTrigger
+            value="list"
+            className="border data-[state=active]:border-primary"
+          >
+            Applicants
+          </TabsTrigger>
+          <TabsTrigger
+            value="decision"
+            className="border data-[state=active]:border-primary"
+          >
+            Role Decision
+          </TabsTrigger>
+        </TabsList>
 
-      {applicationsQuery.isLoading ? (
-        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          Loading applicants...
-        </div>
-      ) : applicants.length === 0 ? (
-        <EmptyState
-          title="No Applicants Yet"
-          description="This workspace is connected to live backend data. Applications will appear here once candidates submit forms."
-        />
-      ) : (
-        <ApplicantTable
-          items={applicants}
-          onViewDetails={(item) => {
-            setSelectedApplicationId(item.id)
-            onNavigate("applicant-details")
-          }}
-          onDelete={(item) => {
-            void (async () => {
-              const confirmed = await confirmDelete({
-                title: "Delete Applicant",
-                description: `Delete applicant "${item.name}"? This cannot be undone.`,
-                confirmLabel: "Delete Applicant",
-              })
-              if (!confirmed) {
-                return
-              }
+        <TabsContent value="list">
+          <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight">Applicants</h1>
+              <p className="text-sm text-muted-foreground">
+                {applicants.length} candidates available for review
+              </p>
+            </div>
+            <Button
+              className="gap-2"
+              variant="outline"
+              onClick={() => {
+                const url = `${API_BASE}/admin/applications?export=csv`
+                if (!token) {
+                  return
+                }
+                fetch(url, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                  .then((res) => res.blob())
+                  .then((blob) => {
+                    const link = document.createElement("a")
+                    link.href = URL.createObjectURL(blob)
+                    link.download = "applications.csv"
+                    link.click()
+                    URL.revokeObjectURL(link.href)
+                  })
+                  .catch(() => {
+                    // no-op; list still usable if export fails
+                  })
+              }}
+            >
+              <Download className="size-4" />
+              Export CSV
+            </Button>
+          </header>
 
-              try {
-                await deleteApplicationMutation.mutateAsync({ id: item.id })
-                showSuccess({
-                  title: "Applicant Deleted",
-                  description: "The applicant has been removed.",
-                })
-              } catch (error) {
-                showError({
-                  title: "Delete Failed",
-                  description: (error as Error).message,
-                })
-              }
-            })()
-          }}
-        />
-      )}
+          {applicationsQuery.isLoading ? (
+            <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              Loading applicants...
+            </div>
+          ) : applicants.length === 0 ? (
+            <EmptyState
+              title="No Applicants Yet"
+              description="This workspace is connected to live backend data. Applications will appear here once candidates submit forms."
+            />
+          ) : (
+            <ApplicantTable
+              items={applicants}
+              onViewDetails={(item) => {
+                setSelectedApplicationId(item.id)
+                onNavigate("applicant-details")
+              }}
+              onDelete={(item) => {
+                void (async () => {
+                  const confirmed = await confirmDelete({
+                    title: "Delete Applicant",
+                    description: `Delete applicant "${item.name}"? This cannot be undone.`,
+                    confirmLabel: "Delete Applicant",
+                  })
+                  if (!confirmed) {
+                    return
+                  }
+
+                  try {
+                    await deleteApplicationMutation.mutateAsync({ id: item.id })
+                    showSuccess({
+                      title: "Applicant Deleted",
+                      description: "The applicant has been removed.",
+                    })
+                  } catch (error) {
+                    showError({
+                      title: "Delete Failed",
+                      description: (error as Error).message,
+                    })
+                  }
+                })()
+              }}
+            />
+          )}
+        </TabsContent>
+        <TabsContent value="decision">
+          <RoleDecisionEngine
+            applicants={applicants.map((a) => ({
+              ...a,
+              roleChoices: [...a.roleChoices],
+            }))}
+          />
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
   )
 }

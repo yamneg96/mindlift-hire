@@ -1,4 +1,4 @@
-import { Eye, FileText } from "lucide-react"
+import { Eye, FileText, ArrowDownToLine } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,21 +45,41 @@ export function DocumentPreviewCard({
             </p>
           </div>
         </div>
-        <Button
-          disabled={!url}
-          size="icon-sm"
-          variant="outline"
-          onClick={() => {
-            if (!url) {
-              return
-            }
-
-            const resolvedUrl = resolveDocumentUrl(url)
-            window.open(resolvedUrl, "_blank", "noopener,noreferrer")
-          }}
-        >
-          <Eye className="size-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            disabled={!url}
+            size="icon-sm"
+            variant="outline"
+            onClick={() => {
+              if (!url) {
+                return
+              }
+              const resolvedUrl = resolveDocumentUrl(url)
+              window.open(resolvedUrl, "_blank", "noopener,noreferrer")
+            }}
+          >
+            <Eye className="size-4" />
+          </Button>
+          <Button
+            disabled={!url}
+            size="icon-sm"
+            variant="outline"
+            onClick={() => {
+              if (!url) {
+                return
+              }
+              // Add fl_attachment transformation for download
+              let downloadUrl = url
+              if (url && url.includes("cloudinary.com")) {
+                downloadUrl = url.replace("/upload/", "/upload/fl_attachment/")
+              }
+              const resolvedUrl = resolveDocumentUrl(downloadUrl)
+              window.open(resolvedUrl, "_blank", "noopener,noreferrer")
+            }}
+          >
+            <ArrowDownToLine className="size-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

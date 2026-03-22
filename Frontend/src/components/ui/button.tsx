@@ -10,6 +10,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        logout:
+          "cursor-pointer border-border bg-background font-bold text-red-500 hover:bg-red-500 hover:text-white dark:border-input dark:bg-input/30 dark:hover:bg-red-500",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

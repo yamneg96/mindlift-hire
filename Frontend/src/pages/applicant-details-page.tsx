@@ -34,7 +34,6 @@ export function ApplicantDetailsPage({
   const applicant = detailsQuery.data
     ? mapApplicationToApplicant(detailsQuery.data)
     : null
-  console.log(applicant)
 
   return (
     <AdminLayout current="details" onNavigate={onNavigate}>
