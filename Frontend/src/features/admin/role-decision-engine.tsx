@@ -87,11 +87,6 @@ export function RoleDecisionEngine({
     setConflictSelections((prev) => ({ ...prev, [role]: applicantId }))
   }
 
-  function confirmConflict(role: string) {
-    const applicantId = conflictSelections[role]
-    if (applicantId) assignRole(role, applicantId)
-  }
-
   function resetDecision() {
     setSelectedAssignments({})
     setRemainingApplicants(
